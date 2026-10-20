@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import LandingPage from './pages/LandingPage';
 
@@ -24,7 +25,25 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
-            <Route path="/admin/*" element={<AdminApp />} />
+            <Route
+              path="/admin/*"
+              element={
+                <ErrorBoundary
+                  fallback={() => (
+                    <div className="mq-wizard-skeleton" style={{ minHeight: '100vh', padding: 24, textAlign: 'center' }}>
+                      <div>
+                        <p>Algo deu errado no painel.</p>
+                        <button type="button" className="mq-btn mq-btn--primary" onClick={() => window.location.reload()}>
+                          Recarregar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                >
+                  <AdminApp />
+                </ErrorBoundary>
+              }
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

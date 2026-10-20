@@ -72,10 +72,16 @@ export function bookableRange(settings: AvailabilitySettings, now = new Date()):
 }
 
 /** Normaliza as regras de reserva (evita valores incoerentes vindos do banco). */
-export function normalizeRules(cfg: BookingRules): BookingRules {
-  const stepMin = Math.max(15, cfg.stepMin);
-  const minDurationMin = Math.max(15, cfg.minDurationMin);
-  return { ...cfg, stepMin, minDurationMin, maxDurationMin: Math.max(minDurationMin, cfg.maxDurationMin) };
+export function normalizeRules(cfg: Partial<BookingRules> | undefined): BookingRules {
+  const n = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+  const stepMin = Math.max(15, n(cfg?.stepMin, 60));
+  const minDurationMin = Math.max(15, n(cfg?.minDurationMin, 60));
+  return {
+    stepMin,
+    minDurationMin,
+    maxDurationMin: Math.max(minDurationMin, n(cfg?.maxDurationMin, 240)),
+    bufferMin: Math.max(0, n(cfg?.bufferMin, 0)),
+  };
 }
 
 interface DayPlan {

@@ -4,7 +4,8 @@ import { isFirebaseConfigured } from '../../services/firebase/config';
 import { BOOKING_SECTION_ID, onBookingRequest } from '../../utils/bookingIntent';
 import { studioWhatsappUrl } from '../../utils/whatsapp';
 import { Alert } from '../ui/Alert';
-import { ButtonLink } from '../ui/Button';
+import { Button, ButtonLink } from '../ui/Button';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { SectionHead } from './SectionHead';
 
 // O fluxo (e o SDK do Firebase) só é baixado quando a seção se aproxima da tela ou alguém clica em "Agendar".
@@ -58,25 +59,13 @@ export function BookingSection() {
 
           <div>
             {!isFirebaseConfigured ? (
-              <div className="mq-wizard">
-                <div className="mq-wizard__body">
-                  <Alert
-                    tone="warning"
-                    title="Agendamento online indisponível no momento"
-                    actions={
-                      <ButtonLink variant="primary" href={studioWhatsappUrl()} target="_blank" rel="noopener noreferrer">
-                        Agendar pelo WhatsApp
-                      </ButtonLink>
-                    }
-                  >
-                    Fale direto com o estúdio pelo WhatsApp.
-                  </Alert>
-                </div>
-              </div>
+              <WizardUnavailable />
             ) : load ? (
-              <Suspense fallback={<WizardSkeleton />}>
-                <BookingWizard />
-              </Suspense>
+              <ErrorBoundary fallback={(retry) => <WizardUnavailable onRetry={retry} />}>
+                <Suspense fallback={<WizardSkeleton />}>
+                  <BookingWizard />
+                </Suspense>
+              </ErrorBoundary>
             ) : (
               <WizardSkeleton />
             )}
@@ -84,6 +73,34 @@ export function BookingSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Agendamento online fora do ar (sem configuração ou erro inesperado): oferece o WhatsApp. */
+function WizardUnavailable({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <div className="mq-wizard">
+      <div className="mq-wizard__body">
+        <Alert
+          tone="warning"
+          title="Agendamento online indisponível no momento"
+          actions={
+            <>
+              <ButtonLink variant="primary" href={studioWhatsappUrl()} target="_blank" rel="noopener noreferrer">
+                Agendar pelo WhatsApp
+              </ButtonLink>
+              {onRetry && (
+                <Button variant="ghost" onClick={onRetry}>
+                  Tentar de novo
+                </Button>
+              )}
+            </>
+          }
+        >
+          Fale direto com o estúdio pelo WhatsApp.
+        </Alert>
+      </div>
+    </div>
   );
 }
 
