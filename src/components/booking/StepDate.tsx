@@ -33,7 +33,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
           return {
             enabled: true,
             className: 'is-available',
-            label: `${label}: ${formatDuration(a.available)} livres`,
+            label: `${label}: ${formatDuration(a.available)} ${a.available <= 60 ? 'livre' : 'livres'}`,
           };
         case 'lotado':
           return { enabled: false, className: 'is-full', label: `${label}: lotado` };

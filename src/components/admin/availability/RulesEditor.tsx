@@ -78,7 +78,7 @@ export function RulesEditor({ settings, onChange }: Props) {
           <h2>Regras gerais</h2>
         </div>
         <div className="adm-form-grid">
-          <Field label="Antecedência mínima" note="horas" hint="Ninguém pede um horário que começa antes disso.">
+          <Field label="Antecedência mínima" note="horas" hint="Ninguém pode pedir um horário que comece antes disso.">
             <NumberInput value={settings.minAdvanceHours} min={0} max={720} step={1} onChange={(n) => onChange({ ...settings, minAdvanceHours: n })} />
           </Field>
           <Field label="Agenda aberta por" note="dias" hint="Quantos dias à frente o site mostra.">

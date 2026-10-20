@@ -8,7 +8,7 @@ export function Services() {
   return (
     <section id="servicos" className="mq-section mq-services" aria-labelledby="servicos-title">
       <div className="container">
-        <SectionHead index="02" eyebrow="Serviços" title="Ensaia ou grava?" id="servicos-title">
+        <SectionHead index="02" eyebrow="Serviços" title="Ensaia, grava ou aluga?" id="servicos-title">
           Escolha o tipo de sessão e veja na hora os horários livres da agenda.
         </SectionHead>
 

@@ -12,7 +12,7 @@ export function StepService({ draft, goTo, onChoose }: Props) {
   return (
     <div>
       <StepTitle>O que vai ser?</StepTitle>
-      <p className="mq-wizard__lead">Escolha o tipo de sessão. Os horários mudam conforme o serviço.</p>
+      <p className="mq-wizard__lead">Escolha o tipo de sessão. Assim o estúdio já prepara a sala do jeito certo.</p>
 
       <div className="mq-choice-list" role="radiogroup" aria-label="Serviço">
         {services.map((s) => {
