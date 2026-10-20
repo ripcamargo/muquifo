@@ -19,17 +19,28 @@ export function BookingSection() {
     if (load) return;
     const off = onBookingRequest(() => setLoad(true));
     const node = ref.current;
-    if (!node || !('IntersectionObserver' in window)) {
-      setLoad(true);
-      return off;
-    }
-    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setLoad(true), {
-      rootMargin: '800px 0px',
-    });
-    io.observe(node);
+    let io: IntersectionObserver | undefined;
+    let idle: number | undefined;
+    const hasIdle = typeof window.requestIdleCallback === 'function';
+    // A seção fica logo abaixo do hero: espera a página terminar de carregar (foto, fontes)
+    // antes de baixar o SDK do Firebase, para não atrasar a primeira tela.
+    const observe = () => {
+      if (!node || !('IntersectionObserver' in window)) return setLoad(true);
+      io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setLoad(true), {
+        rootMargin: '600px 0px',
+      });
+      io.observe(node);
+    };
+    const afterLoad = () => {
+      idle = hasIdle ? window.requestIdleCallback(observe, { timeout: 1500 }) : window.setTimeout(observe, 300);
+    };
+    if (document.readyState === 'complete') afterLoad();
+    else window.addEventListener('load', afterLoad, { once: true });
     return () => {
       off();
-      io.disconnect();
+      io?.disconnect();
+      window.removeEventListener('load', afterLoad);
+      if (idle !== undefined) (hasIdle ? window.cancelIdleCallback(idle) : window.clearTimeout(idle));
     };
   }, [load]);
 
@@ -38,7 +49,7 @@ export function BookingSection() {
       <div className="container">
         <div className="mq-booking-section__layout">
           <div className="mq-booking-section__aside">
-            <SectionHead index="04" eyebrow="Agendamento" title="Reserve seu horário" id="agendar-title">
+            <SectionHead index="01" eyebrow="Agendamento" title="Reserve seu horário" id="agendar-title">
               Em poucos passos você escolhe o dia e o horário livre e manda o pedido para o estúdio.
             </SectionHead>
             <ul className="mq-booking-section__notes">

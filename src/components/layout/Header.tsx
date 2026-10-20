@@ -6,10 +6,10 @@ import { requestBooking } from '../../utils/bookingIntent';
 import { Button } from '../ui/Button';
 
 export const NAV_ITEMS = [
+  { href: '#agendar', label: 'Agendar' },
   { href: '#estudio', label: 'O estúdio' },
   { href: '#servicos', label: 'Serviços' },
   { href: '#galeria', label: 'Galeria' },
-  { href: '#agendar', label: 'Agendar' },
 ];
 
 export function Header() {
@@ -56,7 +56,8 @@ export function Header() {
           </Link>
 
           <nav className="mq-header__nav" aria-label="Principal">
-            {NAV_ITEMS.slice(0, 3).map((item) => (
+            {/* "Agendar" já tem o botão de destaque ao lado. */}
+            {NAV_ITEMS.filter((item) => item.href !== '#agendar').map((item) => (
               <a key={item.href} href={href(item.href)}>
                 {item.label}
               </a>

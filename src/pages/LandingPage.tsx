@@ -26,10 +26,10 @@ export default function LandingPage() {
       <Header />
       <main id="conteudo">
         <Hero />
+        <BookingSection />
         <About />
         <Services />
         <Gallery />
-        <BookingSection />
       </main>
       <Footer />
       <MobileCta />

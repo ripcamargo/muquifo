@@ -14,7 +14,7 @@ export function Gallery() {
   return (
     <section id="galeria" className="mq-section" aria-labelledby="galeria-title">
       <div className="container">
-        <SectionHead index="03" eyebrow="Galeria" title="A sala, sem filtro" id="galeria-title">
+        <SectionHead index="04" eyebrow="Galeria" title="A sala, sem filtro" id="galeria-title">
           Fotos reais do espaço. Toque para ampliar.
         </SectionHead>
         <div className="mq-gallery">
