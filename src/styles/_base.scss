@@ -96,3 +96,18 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+// Parágrafos longos: justificados, com hifenização em português para não abrir
+// espaços grandes entre as palavras nas telas estreitas.
+.mq-hero__subtitle,
+.mq-section-head__lead,
+.mq-about__text p,
+.mq-service-card__summary,
+.mq-service-card__audience,
+.mq-page__body p,
+.mq-page__body li {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphenate-limit-chars: 7 3 3;
+}
