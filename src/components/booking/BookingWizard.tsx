@@ -67,30 +67,32 @@ export default function BookingWizard() {
     root.querySelector<HTMLElement>('[data-step-title]')?.focus({ preventScroll: true });
   }, [step]);
 
+  // A modalidade é só informativa (a agenda é a mesma): trocar não apaga dia nem horário já escolhidos.
   const chooseService = useCallback(
     (service: ServiceType) => {
-      update((d) => ({
-        service,
-        step: 'data',
-        ...(d.service !== service ? { date: null, slot: null } : {}),
-      }));
+      update({ service, step: 'data' });
       syncLead({ serviceType: service, status: 'em_andamento', currentStep: 'data' });
     },
     [update, syncLead],
   );
 
-  // CTAs da página ("Agendar ensaio", "Agendar gravação") pré-selecionam o serviço.
+  // CTAs da página ("Agendar ensaio", "Agendar locação"…) pré-selecionam a modalidade.
   useEffect(() => {
     const apply = (service?: ServiceType) => {
       if (!service) return;
       takePendingService();
-      if (step === 'enviado') return;
+      if (step === 'enviado' || draft.service === service) return;
       if (step === 'contato') update({ service });
-      else if (step === 'servico' || draft.service !== service) chooseService(service);
+      else if (step === 'servico') chooseService(service);
+      else {
+        // Já adiante no fluxo: só troca a modalidade e continua na mesma etapa.
+        update({ service });
+        syncLead({ serviceType: service });
+      }
     };
     apply(takePendingService());
     return onBookingRequest(apply);
-  }, [step, draft.service, update, chooseService]);
+  }, [step, draft.service, update, chooseService, syncLead]);
 
   const pickDate = (date: ISODate) => {
     update((d) => ({ date, step: 'horario', ...(d.date !== date ? { slot: null } : {}) }));

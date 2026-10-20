@@ -1,56 +1,51 @@
-import { CalendarCheck, Clock, MessageCircle } from 'lucide-react';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { ArrowRight, CalendarCheck, Clock, MessageCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
+import { peekDraftInProgress } from '../../hooks/useBookingDraft';
 import { isFirebaseConfigured } from '../../services/firebase/config';
-import { BOOKING_SECTION_ID, onBookingRequest } from '../../utils/bookingIntent';
-import { studioWhatsappUrl } from '../../utils/whatsapp';
-import { Alert } from '../ui/Alert';
-import { Button, ButtonLink } from '../ui/Button';
-import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { BOOKING_SECTION_ID, loadBookingWizard, requestBooking } from '../../utils/bookingIntent';
+import { firstName } from '../../utils/text';
+import { Button } from '../ui/Button';
 import { SectionHead } from './SectionHead';
 
-// O fluxo (e o SDK do Firebase) só é baixado quando a seção se aproxima da tela ou alguém clica em "Agendar".
-const BookingWizard = lazy(() => import('../booking/BookingWizard'));
+const STEPS = [
+  { title: 'Seu contato', text: 'Nome e WhatsApp, nada mais.' },
+  { title: 'Dia e horário', text: 'Veja os períodos livres e escolha quantas horas quer.' },
+  { title: 'Envio pelo WhatsApp', text: 'O pedido chega pronto e o estúdio confirma.' },
+];
 
+/** Chamada para o agendamento. O fluxo em si abre numa janela por cima da página (BookingModal). */
 export function BookingSection() {
-  const ref = useRef<HTMLElement>(null);
-  const [load, setLoad] = useState(false);
+  const { hash } = useLocation();
+  // Relido sempre que a janela abre/fecha, para oferecer "continuar" a quem parou no meio.
+  const [inProgress, setInProgress] = useState(peekDraftInProgress);
+  useEffect(() => setInProgress(peekDraftInProgress()), [hash]);
 
+  // Baixa o fluxo em segundo plano depois que a página carrega: a janela abre na hora.
   useEffect(() => {
-    if (load) return;
-    const off = onBookingRequest(() => setLoad(true));
-    const node = ref.current;
-    let io: IntersectionObserver | undefined;
+    if (!isFirebaseConfigured) return;
     let idle: number | undefined;
     const hasIdle = typeof window.requestIdleCallback === 'function';
-    // A seção fica logo abaixo do hero: espera a página terminar de carregar (foto, fontes)
-    // antes de baixar o SDK do Firebase, para não atrasar a primeira tela.
-    const observe = () => {
-      if (!node || !('IntersectionObserver' in window)) return setLoad(true);
-      io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setLoad(true), {
-        rootMargin: '600px 0px',
-      });
-      io.observe(node);
+    const prefetch = () => {
+      idle = hasIdle
+        ? window.requestIdleCallback(() => void loadBookingWizard(), { timeout: 2500 })
+        : window.setTimeout(() => void loadBookingWizard(), 800);
     };
-    const afterLoad = () => {
-      idle = hasIdle ? window.requestIdleCallback(observe, { timeout: 1500 }) : window.setTimeout(observe, 300);
-    };
-    if (document.readyState === 'complete') afterLoad();
-    else window.addEventListener('load', afterLoad, { once: true });
+    if (document.readyState === 'complete') prefetch();
+    else window.addEventListener('load', prefetch, { once: true });
     return () => {
-      off();
-      io?.disconnect();
-      window.removeEventListener('load', afterLoad);
+      window.removeEventListener('load', prefetch);
       if (idle !== undefined) (hasIdle ? window.cancelIdleCallback(idle) : window.clearTimeout(idle));
     };
-  }, [load]);
+  }, []);
 
   return (
-    <section id={BOOKING_SECTION_ID} ref={ref} className="mq-section mq-booking-section" aria-labelledby="agendar-title">
+    <section id={BOOKING_SECTION_ID} className="mq-section mq-booking-section" aria-labelledby="reservar-title">
       <div className="container">
         <div className="mq-booking-section__layout">
           <div className="mq-booking-section__aside">
-            <SectionHead index="01" eyebrow="Agendamento" title="Reserve seu horário" id="agendar-title">
-              Em poucos passos você escolhe o dia e o horário livre e manda o pedido para o estúdio.
+            <SectionHead index="01" eyebrow="Agendamento" title="Reserve seu horário" id="reservar-title">
+              Em poucos passos você escolhe o dia, vê os períodos livres e manda o pedido para o estúdio.
             </SectionHead>
             <ul className="mq-booking-section__notes">
               <li>
@@ -68,57 +63,33 @@ export function BookingSection() {
             </ul>
           </div>
 
-          <div>
-            {!isFirebaseConfigured ? (
-              <WizardUnavailable />
-            ) : load ? (
-              <ErrorBoundary fallback={(retry) => <WizardUnavailable onRetry={retry} />}>
-                <Suspense fallback={<WizardSkeleton />}>
-                  <BookingWizard />
-                </Suspense>
-              </ErrorBoundary>
-            ) : (
-              <WizardSkeleton />
+          <div className="mq-booking-cta">
+            <ol className="mq-booking-cta__steps">
+              {STEPS.map((s, i) => (
+                <li key={s.title}>
+                  <b aria-hidden="true">0{i + 1}</b>
+                  <span>
+                    <strong>{s.title}</strong>
+                    {s.text}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <Button
+              variant="primary"
+              size="lg"
+              block
+              onClick={() => requestBooking()}
+              iconRight={<ArrowRight size={20} aria-hidden="true" />}
+            >
+              {inProgress ? 'Continuar meu pedido' : 'Começar agendamento'}
+            </Button>
+            {inProgress?.name && (
+              <p className="mq-booking-cta__resume">{firstName(inProgress.name)}, seu pedido ficou salvo neste aparelho.</p>
             )}
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-/** Agendamento online fora do ar (sem configuração ou erro inesperado): oferece o WhatsApp. */
-function WizardUnavailable({ onRetry }: { onRetry?: () => void }) {
-  return (
-    <div className="mq-wizard">
-      <div className="mq-wizard__body">
-        <Alert
-          tone="warning"
-          title="Agendamento online indisponível no momento"
-          actions={
-            <>
-              <ButtonLink variant="primary" href={studioWhatsappUrl()} target="_blank" rel="noopener noreferrer">
-                Agendar pelo WhatsApp
-              </ButtonLink>
-              {onRetry && (
-                <Button variant="ghost" onClick={onRetry}>
-                  Tentar de novo
-                </Button>
-              )}
-            </>
-          }
-        >
-          Fale direto com o estúdio pelo WhatsApp.
-        </Alert>
-      </div>
-    </div>
-  );
-}
-
-function WizardSkeleton() {
-  return (
-    <div className="mq-wizard mq-wizard-skeleton" aria-busy="true">
-      <span className="mq-spinner" aria-label="Carregando agendamento" />
-    </div>
   );
 }

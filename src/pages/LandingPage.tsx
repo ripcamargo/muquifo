@@ -7,17 +7,16 @@ import { Services } from '../components/landing/Services';
 import { Footer } from '../components/layout/Footer';
 import { Header } from '../components/layout/Header';
 import { MobileCta } from '../components/layout/MobileCta';
-import { BOOKING_SECTION_ID, requestBooking } from '../utils/bookingIntent';
+import { BookingModal } from '../components/booking/BookingModal';
+import { BOOKING_HASH } from '../utils/bookingIntent';
 
 export default function LandingPage() {
-  // Links diretos como /#agendar: a seção só existe depois que o React renderiza.
+  // Links diretos como /#galeria: a seção só existe depois que o React renderiza.
+  // (#agendar não rola a página: abre a janela de agendamento.)
   useEffect(() => {
     const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id) return;
-    const frame = requestAnimationFrame(() => {
-      if (id === BOOKING_SECTION_ID) requestBooking();
-      else document.getElementById(id)?.scrollIntoView();
-    });
+    if (!id || window.location.hash === BOOKING_HASH) return;
+    const frame = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
     return () => cancelAnimationFrame(frame);
   }, []);
 
@@ -33,6 +32,7 @@ export default function LandingPage() {
       </main>
       <Footer />
       <MobileCta />
+      <BookingModal />
     </>
   );
 }

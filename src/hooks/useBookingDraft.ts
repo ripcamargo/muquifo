@@ -66,6 +66,12 @@ function load(): { draft: BookingDraft; restored: boolean } {
   return { draft: freshDraft(), restored: false };
 }
 
+/** Nome de quem deixou um pedido pela metade neste navegador (para oferecer "continuar"). */
+export function peekDraftInProgress(): { name: string } | null {
+  const { draft, restored } = load();
+  return restored && draft.step !== 'enviado' ? { name: draft.name } : null;
+}
+
 export function useBookingDraft() {
   const [{ draft, restored }, setState] = useState(load);
 

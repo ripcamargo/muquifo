@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 
 /**
  * Botão fixo no rodapé do celular. Aparece depois da primeira dobra e some
- * quando a seção de agendamento está na tela (para não cobrir campos do formulário).
+ * quando a seção de agendamento (que já tem o botão grande) está na tela.
  */
 export function MobileCta() {
   const [pastHero, setPastHero] = useState(false);

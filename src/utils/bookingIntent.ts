@@ -1,5 +1,5 @@
-// Ponte entre os botões "Agendar" espalhados pela página e o fluxo de agendamento
-// (que é carregado sob demanda e pode ainda não estar montado quando o botão é clicado).
+// Ponte entre os botões "Agendar" espalhados pela página e a janela de agendamento.
+// O agendamento abre em `#agendar` (dá para compartilhar o link e o "voltar" do celular fecha a janela).
 import type { ServiceType } from '../types';
 
 type Listener = (service?: ServiceType) => void;
@@ -7,13 +7,15 @@ type Listener = (service?: ServiceType) => void;
 let pending: ServiceType | undefined;
 const listeners = new Set<Listener>();
 
-export const BOOKING_SECTION_ID = 'agendar';
+/** Fragmento da URL que abre a janela de agendamento. */
+export const BOOKING_HASH = '#agendar';
+/** Seção da página que apresenta o agendamento. */
+export const BOOKING_SECTION_ID = 'reservar';
 
+/** Abre a janela de agendamento, opcionalmente com a modalidade já escolhida. */
 export function requestBooking(service?: ServiceType) {
   if (service) pending = service;
   listeners.forEach((l) => l(service));
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById(BOOKING_SECTION_ID)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
 }
 
 /** Serviço escolhido num CTA antes de o fluxo estar montado (consumido uma única vez). */
@@ -27,3 +29,6 @@ export function onBookingRequest(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+/** Baixa o fluxo de agendamento (e o Firebase) antes de alguém clicar, para a janela abrir na hora. */
+export const loadBookingWizard = () => import('../components/booking/BookingWizard');
