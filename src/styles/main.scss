@@ -1,0 +1,48 @@
+// ── Bootstrap: só as partes usadas (grid, formulários, utilitários) ─────────
+$font-family-sans-serif: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+$body-bg: #120d0f;
+$body-color: #ece7d3;
+$primary: #ece7d3;
+$secondary: #6e162f;
+$border-radius: 2px;
+$border-radius-sm: 2px;
+$border-radius-lg: 4px;
+$link-color: #ece7d3;
+$link-decoration: underline;
+$enable-shadows: false;
+$enable-gradients: false;
+$headings-font-weight: 400;
+$grid-gutter-width: 1.5rem;
+$container-max-widths: (sm: 540px, md: 720px, lg: 960px, xl: 1140px, xxl: 1240px);
+
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+// Só os utilitários realmente usados (o conjunto completo gera ~100 KB de CSS).
+$mq-keep-utilities: ('display', 'gap', 'justify-content', 'flex-wrap', 'align-items', 'margin-top', 'margin-bottom',
+  'padding-start', 'width', 'text-align');
+$mq-utilities: ();
+@each $key in $mq-keep-utilities {
+  $mq-utilities: map-merge($mq-utilities, ($key: map-get($utilities, $key)));
+}
+$utilities: $mq-utilities;
+
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/helpers';
+@import 'bootstrap/scss/utilities/api';
+
+@import 'tokens';
+@import 'base';
+@import 'ui';
+@import 'layout';
+@import 'landing';
+@import 'booking';
+@import 'calendar';

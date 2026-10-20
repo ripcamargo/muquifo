@@ -1,0 +1,38 @@
+import { useEffect } from 'react';
+import { About } from '../components/landing/About';
+import { BookingSection } from '../components/landing/BookingSection';
+import { Gallery } from '../components/landing/Gallery';
+import { Hero } from '../components/landing/Hero';
+import { Services } from '../components/landing/Services';
+import { Footer } from '../components/layout/Footer';
+import { Header } from '../components/layout/Header';
+import { MobileCta } from '../components/layout/MobileCta';
+import { BOOKING_SECTION_ID, requestBooking } from '../utils/bookingIntent';
+
+export default function LandingPage() {
+  // Links diretos como /#agendar: a seção só existe depois que o React renderiza.
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+    const frame = requestAnimationFrame(() => {
+      if (id === BOOKING_SECTION_ID) requestBooking();
+      else document.getElementById(id)?.scrollIntoView();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <>
+      <Header />
+      <main id="conteudo">
+        <Hero />
+        <About />
+        <Services />
+        <Gallery />
+        <BookingSection />
+      </main>
+      <Footer />
+      <MobileCta />
+    </>
+  );
+}

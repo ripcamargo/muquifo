@@ -1,0 +1,339 @@
+.mq-wizard {
+  scroll-margin-top: calc(var(--mq-header-h) + env(safe-area-inset-top) + 12px);
+  background: var(--mq-bg);
+  color: var(--mq-cream);
+  border-radius: var(--mq-radius);
+  box-shadow: 0 24px 60px rgba(20, 2, 8, 0.45);
+  margin: 0 calc(var(--mq-gutter) * -0.5);
+  @media (min-width: 576px) {
+    margin: 0;
+  }
+
+  &__progress {
+    padding: 1.1rem 1.25rem 0;
+    @media (min-width: 576px) {
+      padding: 1.5rem 2rem 0;
+    }
+  }
+  &__progress-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.65rem;
+    color: var(--mq-cream-60);
+    strong {
+      color: var(--mq-cream);
+      font-weight: 500;
+    }
+  }
+  &__bars {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    span {
+      height: 4px;
+      background: var(--mq-line);
+      transition: background-color 0.3s var(--mq-ease);
+      &.is-done {
+        background: var(--mq-cream);
+      }
+      &.is-current {
+        background: var(--mq-cream-60);
+      }
+    }
+  }
+
+  &__body {
+    padding: 1.5rem 1.25rem 1.5rem;
+    @media (min-width: 576px) {
+      padding: 2rem 2rem 2rem;
+    }
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__title {
+    font-size: clamp(2rem, 8.5vw, 2.6rem);
+    margin-bottom: 0.5rem;
+  }
+  &__lead {
+    color: var(--mq-cream-80);
+    margin-bottom: 1.5rem;
+  }
+
+  &__footer {
+    display: flex;
+    // Em telas estreitas o botão principal sobe para a própria linha e o "Voltar" fica embaixo.
+    flex-wrap: wrap-reverse;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: 1.75rem;
+    .mq-btn--primary {
+      flex: 1 1 200px;
+      min-width: 0;
+      white-space: normal;
+      text-align: center;
+      @media (min-width: 576px) {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+    }
+  }
+
+  &__privacy {
+    font-size: 0.8125rem;
+    color: var(--mq-cream-60);
+    margin-top: 1rem;
+    line-height: 1.5;
+    a {
+      color: var(--mq-cream-80);
+    }
+  }
+
+  &__resume {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.6rem 1.25rem;
+    border-bottom: 1px solid var(--mq-line);
+    font-size: 0.875rem;
+    color: var(--mq-cream-60);
+    @media (min-width: 576px) {
+      padding: 0.6rem 2rem;
+    }
+  }
+}
+
+.mq-wizard-skeleton {
+  min-height: 460px;
+  display: grid;
+  place-items: center;
+  color: var(--mq-cream-60);
+}
+
+// ── Escolha do serviço ────────────────────────────────────────────────────
+.mq-choice-list {
+  display: grid;
+  gap: 0.75rem;
+}
+.mq-choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 84px;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  background: var(--mq-bg-raised);
+  border: 1px solid var(--mq-line-strong);
+  border-radius: var(--mq-radius);
+  color: var(--mq-cream);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  &:hover {
+    border-color: var(--mq-cream);
+  }
+  &__icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    background: var(--mq-wine);
+    flex-shrink: 0;
+  }
+  &__text {
+    flex: 1;
+    min-width: 0;
+    strong {
+      display: block;
+      font-family: var(--mq-font-display);
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: 1.5rem;
+      line-height: 1.05;
+    }
+    small {
+      color: var(--mq-cream-60);
+      font-size: 0.875rem;
+    }
+  }
+  &__check {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--mq-line-strong);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  &[aria-checked='true'] {
+    background: var(--mq-cream);
+    color: var(--mq-wine);
+    border-color: var(--mq-cream);
+    small {
+      color: rgba(110, 22, 47, 0.8);
+    }
+    .mq-choice__icon {
+      color: var(--mq-cream);
+    }
+    .mq-choice__check {
+      background: var(--mq-wine);
+      border-color: var(--mq-wine);
+      color: var(--mq-cream);
+    }
+  }
+}
+
+// ── Cabeçalho de etapa com o que já foi escolhido ─────────────────────────
+.mq-picked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--mq-line-strong);
+    background: transparent;
+    color: var(--mq-cream-80);
+    font-size: 0.875rem;
+    border-radius: var(--mq-radius);
+    cursor: pointer;
+    &:hover {
+      border-color: var(--mq-cream);
+      color: var(--mq-cream);
+    }
+  }
+}
+
+// ── Horários ──────────────────────────────────────────────────────────────
+.mq-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.mq-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 64px;
+  padding: 0.6rem 0.85rem;
+  background: var(--mq-bg-raised);
+  border: 1px solid var(--mq-line-strong);
+  border-radius: var(--mq-radius);
+  color: var(--mq-cream);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  &__time {
+    font-family: var(--mq-font-label);
+    font-weight: 500;
+    font-size: 1.125rem;
+    letter-spacing: 0.02em;
+  }
+  &__state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--mq-cream-60);
+  }
+  &:hover:not(:disabled) {
+    border-color: var(--mq-cream);
+  }
+  &[aria-pressed='true'] {
+    background: var(--mq-cream);
+    border-color: var(--mq-cream);
+    color: var(--mq-wine);
+    .mq-slot__state {
+      color: var(--mq-wine);
+    }
+  }
+  &:disabled {
+    cursor: not-allowed;
+    background: transparent;
+    border-color: var(--mq-line);
+    color: var(--mq-cream-40);
+    .mq-slot__time {
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+  }
+  &.is-hold:disabled {
+    border-style: dashed;
+    .mq-slot__time {
+      text-decoration: none;
+    }
+  }
+}
+
+// ── Revisão ───────────────────────────────────────────────────────────────
+.mq-summary {
+  margin: 0 0 1.25rem;
+  border-top: 1px solid var(--mq-line);
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--mq-line);
+  }
+  dt {
+    font-family: var(--mq-font-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.75rem;
+    color: var(--mq-cream-60);
+  }
+  dd {
+    margin: 0;
+    grid-column: 1;
+    font-size: 1rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  &__edit {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: 0.875rem;
+  }
+}
+
+.mq-sent {
+  text-align: center;
+  padding: 0.5rem 0;
+  &__icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1.25rem;
+    display: grid;
+    place-items: center;
+    background: var(--mq-cream);
+    color: var(--mq-wine);
+  }
+  .mq-status {
+    margin-bottom: 1rem;
+  }
+  &__actions {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    @media (min-width: 576px) {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}

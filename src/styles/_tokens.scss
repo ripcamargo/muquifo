@@ -1,0 +1,42 @@
+// Paleta extraída do logo (bordô #6E162F / creme #ECE7D3) e das fotos (feltro vinho, carpete grafite).
+:root {
+  --mq-bg: #120d0f;
+  --mq-bg-raised: #1a1315;
+  --mq-surface: #211719;
+  --mq-surface-2: #2b1e21;
+  --mq-line: rgba(236, 231, 211, 0.14);
+  --mq-line-strong: rgba(236, 231, 211, 0.32);
+
+  --mq-wine: #6e162f;
+  --mq-wine-deep: #4f0f21;
+  --mq-wine-bright: #8a1d3b;
+
+  --mq-cream: #ece7d3;
+  --mq-cream-80: rgba(236, 231, 211, 0.8);
+  --mq-cream-60: rgba(236, 231, 211, 0.64);
+  --mq-cream-40: rgba(236, 231, 211, 0.42);
+
+  --mq-rec: #e5482f;
+  --mq-ok: #8fcf9c;
+  --mq-warn: #e8b04f;
+  --mq-error: #ff9a8a;
+  --mq-info: #a9bdd1;
+
+  --mq-font-display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
+  --mq-font-label: 'Oswald', 'Arial Narrow', sans-serif;
+  --mq-font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --mq-radius: 2px;
+  --mq-header-h: 64px;
+  --mq-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --mq-gutter: 1.25rem;
+
+  color-scheme: dark;
+}
+
+@media (min-width: 992px) {
+  :root {
+    --mq-header-h: 76px;
+    --mq-gutter: 2rem;
+  }
+}

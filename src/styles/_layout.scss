@@ -1,0 +1,207 @@
+// ── Cabeçalho ─────────────────────────────────────────────────────────────
+.mq-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1000;
+  height: var(--mq-header-h);
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+  transition: background-color 0.25s var(--mq-ease), border-color 0.25s var(--mq-ease);
+  border-bottom: 1px solid transparent;
+
+  &.is-solid,
+  &.is-open {
+    background: rgba(18, 13, 15, 0.94);
+    border-bottom-color: var(--mq-line);
+    @supports (backdrop-filter: blur(8px)) {
+      background: rgba(18, 13, 15, 0.82);
+      backdrop-filter: blur(10px);
+    }
+  }
+
+  &__inner {
+    height: var(--mq-header-h);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  &__brand {
+    display: flex;
+    align-items: center;
+    margin-right: auto;
+    min-height: 44px;
+    img {
+      height: 28px;
+      width: auto;
+      @media (min-width: 992px) {
+        height: 32px;
+      }
+    }
+  }
+  &__nav {
+    display: none;
+    gap: 0.25rem;
+    @media (min-width: 992px) {
+      display: flex;
+    }
+    a {
+      font-family: var(--mq-font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.9375rem;
+      text-decoration: none;
+      color: var(--mq-cream-80);
+      padding: 0.6rem 0.85rem;
+      &:hover {
+        color: var(--mq-cream);
+      }
+    }
+  }
+  &__cta {
+    display: none;
+    @media (min-width: 400px) {
+      display: inline-flex;
+    }
+  }
+  &__menu-btn {
+    @media (min-width: 992px) {
+      display: none;
+    }
+  }
+}
+
+.mq-mobile-menu {
+  position: fixed;
+  z-index: 999;
+  inset: calc(var(--mq-header-h) + env(safe-area-inset-top)) 0 0;
+  background: var(--mq-bg);
+  padding: 1.5rem var(--mq-gutter) calc(2rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  animation: mq-fade 0.15s var(--mq-ease);
+  nav {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--mq-line);
+  }
+  nav a {
+    font-family: var(--mq-font-display);
+    text-transform: uppercase;
+    font-size: 2.25rem;
+    line-height: 1;
+    text-decoration: none;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--mq-line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    span {
+      font-family: var(--mq-font-label);
+      font-size: 0.8125rem;
+      color: var(--mq-cream-40);
+      letter-spacing: 0.08em;
+    }
+  }
+  .mq-btn {
+    margin-top: auto;
+  }
+  @media (min-width: 992px) {
+    display: none;
+  }
+}
+
+// ── CTA fixo no celular ───────────────────────────────────────────────────
+.mq-sticky-cta {
+  position: fixed;
+  z-index: 900;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem var(--mq-gutter) calc(0.75rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(18, 13, 15, 0.98) 55%, rgba(18, 13, 15, 0));
+  transform: translateY(110%);
+  transition: transform 0.25s var(--mq-ease);
+  &.is-visible {
+    transform: none;
+  }
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+// ── Rodapé ────────────────────────────────────────────────────────────────
+.mq-footer {
+  background: var(--mq-wine-deep);
+  border-top: 1px solid rgba(236, 231, 211, 0.12);
+  color: var(--mq-cream);
+  padding: 3.5rem 0 calc(6rem + env(safe-area-inset-bottom));
+  @media (min-width: 768px) {
+    padding-bottom: 2.5rem;
+  }
+  &__logo {
+    width: min(280px, 70vw);
+    height: auto;
+    margin-bottom: 2rem;
+  }
+  &__grid {
+    display: grid;
+    gap: 2rem;
+    @media (min-width: 768px) {
+      grid-template-columns: 1.4fr 1fr 1fr;
+    }
+  }
+  h2 {
+    color: rgba(236, 231, 211, 0.7);
+    margin-bottom: 0.75rem;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  &__bottom {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(236, 231, 211, 0.22);
+    font-size: 0.8125rem;
+    color: rgba(236, 231, 211, 0.72);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    justify-content: space-between;
+  }
+}
+
+// ── Página simples (privacidade, 404) ─────────────────────────────────────
+.mq-page {
+  padding: calc(var(--mq-header-h) + 3rem) 0 5rem;
+  min-height: 70vh;
+  &__body {
+    max-width: 44rem;
+    h1 {
+      font-size: clamp(2.5rem, 9vw, 4rem);
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      font-family: var(--mq-font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 1.125rem;
+      margin: 2rem 0 0.6rem;
+    }
+    p,
+    li {
+      color: var(--mq-cream-80);
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Muquifo Home Studio",
+  "short_name": "Muquifo",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#120d0f",
+  "theme_color": "#6e162f",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,184 @@
+rules_version = '2';
+
+// Regras do Muquifo Home Studio.
+// - Visitantes (sessão anônima do Firebase) só criam/atualizam o PRÓPRIO lead e pedido, e nunca leem dados de clientes.
+// - Disponibilidade é pública para leitura (sem dados pessoais) e só o administrador altera.
+// - Administrador = custom claim admin:true OU documento admins/{uid} (criado manualmente no Console).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funções auxiliares ─────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && (request.auth.token.admin == true
+            || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function str(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    function validName(v) { return str(v, 2, 80); }
+    function validPhoneDisplay(v) { return str(v, 10, 20); }
+    function validPhone(v) { return v is string && v.matches('^55[1-9]{2}[0-9]{8,9}$'); }
+    function validService(v) { return v in ['ensaio', 'gravacao']; }
+    function validStep(v) { return v in ['contato', 'servico', 'data', 'horario', 'detalhes', 'revisao', 'enviado']; }
+    function validDate(v) { return v is string && v.matches('^20[2-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'); }
+    function validTime(v) { return v is string && v.matches('^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$'); }
+
+    function throttleAfter() {
+      return getAfter(/databases/$(database)/documents/visitorThrottle/$(request.auth.uid)).data;
+    }
+
+    // ── Controle de frequência por visitante ───────────────────────────────
+    // Cada lead/pedido criado pelo visitante precisa atualizar este documento na mesma operação,
+    // e ele só aceita uma nova marcação depois de um intervalo mínimo.
+    match /visitorThrottle/{uid} {
+      allow read: if isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['leadAt', 'requestAt'])
+        && (!('leadAt' in request.resource.data) || request.resource.data.leadAt == request.time)
+        && (!('requestAt' in request.resource.data) || request.resource.data.requestAt == request.time);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['leadAt', 'requestAt'])
+        && throttleFieldOk('leadAt', 20)
+        && throttleFieldOk('requestAt', 15);
+      allow delete: if isAdmin();
+
+      function throttleFieldOk(field, seconds) {
+        return !(field in request.resource.data.diff(resource.data).affectedKeys())
+          || (request.resource.data[field] == request.time
+              && (!(field in resource.data) || request.time > resource.data[field] + duration.value(seconds, 's')));
+      }
+    }
+
+    // ── Leads ──────────────────────────────────────────────────────────────
+    match /leads/{leadId} {
+      allow read, delete: if isAdmin();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'name', 'whatsapp', 'whatsappNormalized', 'source', 'status', 'currentStep', 'sessionId',
+             'serviceType', 'bookingRequestId', 'privacyNoticeVersion', 'ownerUid',
+             'createdAt', 'updatedAt', 'lastActivityAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.sessionId == leadId
+        && leadId.matches('^[a-f0-9]{24}$')
+        && validName(request.resource.data.name)
+        && validPhoneDisplay(request.resource.data.whatsapp)
+        && validPhone(request.resource.data.whatsappNormalized)
+        && request.resource.data.source == 'site'
+        && request.resource.data.status == 'novo'
+        && validStep(request.resource.data.currentStep)
+        && (request.resource.data.serviceType == null || validService(request.resource.data.serviceType))
+        && request.resource.data.bookingRequestId == null
+        && str(request.resource.data.privacyNoticeVersion, 1, 20)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastActivityAt == request.time
+        && throttleAfter().leadAt == request.time;
+
+      // Administrador: pode alterar status e anotações (os demais campos ficam como o visitante enviou).
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt'])
+        && request.resource.data.status in ['novo', 'em_andamento', 'pedido_preparado', 'aguardando_confirmacao',
+                                            'confirmado', 'recusado', 'cancelado', 'abandonado'];
+
+      // Visitante dono do lead: só avança no fluxo enquanto o estúdio não assumiu o pedido.
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && resource.data.status in ['novo', 'em_andamento', 'pedido_preparado']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'name', 'whatsapp', 'whatsappNormalized', 'status', 'currentStep', 'serviceType',
+             'bookingRequestId', 'updatedAt', 'lastActivityAt'])
+        && request.resource.data.status in ['novo', 'em_andamento', 'pedido_preparado']
+        && validName(request.resource.data.name)
+        && validPhoneDisplay(request.resource.data.whatsapp)
+        && validPhone(request.resource.data.whatsappNormalized)
+        && validStep(request.resource.data.currentStep)
+        && (request.resource.data.serviceType == null || validService(request.resource.data.serviceType))
+        && (request.resource.data.bookingRequestId == null || request.resource.data.bookingRequestId == leadId)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastActivityAt == request.time;
+    }
+
+    // ── Pedidos de agendamento ─────────────────────────────────────────────
+    match /bookingRequests/{requestId} {
+      allow read, delete: if isAdmin();
+
+      function validVisitorRequest(d) {
+        return validName(d.name)
+          && validPhoneDisplay(d.whatsapp)
+          && validPhone(d.whatsappNormalized)
+          && validService(d.serviceType)
+          && str(d.projectName, 0, 120)
+          && (d.peopleCount == null || (d.peopleCount is int && d.peopleCount >= 1 && d.peopleCount <= 50))
+          && str(d.description, 0, 1000)
+          && str(d.notes, 0, 1000)
+          && validDate(d.requestedDate)
+          && validTime(d.startTime)
+          && validTime(d.endTime)
+          && d.endTime > d.startTime
+          && d.status == 'pedido_preparado'
+          && d.updatedAt == request.time;
+      }
+
+      // Um pedido por lead: o id do pedido é o id do lead, e o lead precisa ser do visitante.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'leadId', 'ownerUid', 'name', 'whatsapp', 'whatsappNormalized', 'serviceType', 'projectName',
+             'peopleCount', 'description', 'notes', 'requestedDate', 'startTime', 'endTime', 'status',
+             'createdAt', 'updatedAt'])
+        && request.resource.data.leadId == requestId
+        && request.resource.data.ownerUid == request.auth.uid
+        && get(/databases/$(database)/documents/leads/$(requestId)).data.ownerUid == request.auth.uid
+        && validVisitorRequest(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && throttleAfter().requestAt == request.time;
+
+      // Visitante pode reenviar (ex.: trocou o horário) enquanto o estúdio não mexeu no pedido.
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && resource.data.status == 'pedido_preparado'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'name', 'whatsapp', 'whatsappNormalized', 'serviceType', 'projectName', 'peopleCount',
+             'description', 'notes', 'requestedDate', 'startTime', 'endTime', 'status', 'updatedAt'])
+        && validVisitorRequest(request.resource.data)
+        && throttleAfter().requestAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt', 'confirmedAt'])
+        && request.resource.data.status in ['pedido_preparado', 'aguardando_confirmacao', 'confirmado',
+                                            'recusado', 'cancelado', 'abandonado'];
+    }
+
+    // ── Disponibilidade (pública para leitura, sem dados pessoais) ─────────
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /calendarDays/{date} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.data.date == date;
+      allow delete: if isAdmin();
+    }
+
+    // ── Administradores: criados apenas pelo Console/Admin SDK ─────────────
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
+    // Todo o resto é negado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
