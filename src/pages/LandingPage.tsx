@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { About } from '../components/landing/About';
 import { BookingSection } from '../components/landing/BookingSection';
-import { Gallery } from '../components/landing/Gallery';
 import { Hero } from '../components/landing/Hero';
 import { Services } from '../components/landing/Services';
 import { Footer } from '../components/layout/Footer';
@@ -25,10 +24,9 @@ export default function LandingPage() {
       <Header />
       <main id="conteudo">
         <Hero />
-        <BookingSection />
         <About />
         <Services />
-        <Gallery />
+        <BookingSection />
       </main>
       <Footer />
       <MobileCta />

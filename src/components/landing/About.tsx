@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react';
 import { photos } from '../../config/photos';
 import { studio } from '../../config/studio';
 import { Picture } from '../ui/Picture';
+import { Gallery } from './Gallery';
 import { SectionHead } from './SectionHead';
 
 function FactList({ title, items }: { title: string; items: readonly string[] }) {
@@ -31,7 +32,7 @@ export function About() {
             </figure>
           </div>
           <div className="col-md-6 col-lg-5 mq-about__text">
-            <SectionHead index="02" eyebrow="O estúdio" title={about.title} id="estudio-title" />
+            <SectionHead index="01" eyebrow="O estúdio" title={about.title} id="estudio-title" />
             {about.paragraphs.map((p) => (
               <p key={p}>{p}</p>
             ))}
@@ -58,6 +59,8 @@ export function About() {
             </div>
           </div>
         </div>
+
+        <Gallery />
       </div>
     </section>
   );

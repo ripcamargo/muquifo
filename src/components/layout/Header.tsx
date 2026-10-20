@@ -6,10 +6,9 @@ import { requestBooking } from '../../utils/bookingIntent';
 import { Button } from '../ui/Button';
 
 export const NAV_ITEMS = [
-  { href: '#agendar', label: 'Agendar' },
   { href: '#estudio', label: 'O estúdio' },
   { href: '#servicos', label: 'Serviços' },
-  { href: '#galeria', label: 'Galeria' },
+  { href: '#agendar', label: 'Agendar' },
 ];
 
 export function Header() {

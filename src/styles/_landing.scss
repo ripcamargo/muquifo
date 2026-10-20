@@ -147,6 +147,9 @@
     margin: 0 calc(var(--mq-gutter) * -1) 2.5rem;
     @media (min-width: 768px) {
       margin: 0;
+      // Acompanha a rolagem enquanto o texto ao lado (mais longo) é lido.
+      position: sticky;
+      top: calc(var(--mq-header-h) + 1.5rem);
     }
     img {
       width: 100%;
@@ -455,5 +458,29 @@
         margin-top: 0.2rem;
       }
     }
+  }
+}
+
+// Galeria dentro da seção "O estúdio".
+.mq-gallery-block {
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--mq-line);
+  scroll-margin-top: calc(var(--mq-header-h) + 16px);
+  @media (min-width: 992px) {
+    margin-top: 5rem;
+    padding-top: 3.5rem;
+  }
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  &__title {
+    font-size: clamp(1.9rem, 7vw, 2.75rem);
+    margin: 0;
   }
 }

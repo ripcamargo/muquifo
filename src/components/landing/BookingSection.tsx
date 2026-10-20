@@ -44,7 +44,7 @@ export function BookingSection() {
       <div className="container">
         <div className="mq-booking-section__layout">
           <div className="mq-booking-section__aside">
-            <SectionHead index="01" eyebrow="Agendamento" title="Reserve seu horário" id="reservar-title">
+            <SectionHead index="03" eyebrow="Agendamento" title="Reserve seu horário" id="reservar-title">
               Em poucos passos você escolhe o dia, vê os períodos livres e manda o pedido para o estúdio.
             </SectionHead>
             <ul className="mq-booking-section__notes">

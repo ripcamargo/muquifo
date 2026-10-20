@@ -3,39 +3,40 @@ import { useRef, useState } from 'react';
 import { photos, type Photo } from '../../config/photos';
 import { useModal } from '../../hooks/useModal';
 import { Picture } from '../ui/Picture';
-import { SectionHead } from './SectionHead';
 
 const ITEMS: Photo[] = [photos.bateria, photos.detalheGuitarra, photos.detalheMesa, photos.guitarra];
 const SIZES = ['(min-width: 992px) 50vw, 100vw', '(min-width: 992px) 25vw, 50vw', '(min-width: 992px) 25vw, 50vw', '(min-width: 992px) 25vw, 100vw'];
 
+/** Galeria de fotos reais, exibida dentro da seção "O estúdio". */
 export function Gallery() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="galeria" className="mq-section" aria-labelledby="galeria-title">
-      <div className="container">
-        <SectionHead index="04" eyebrow="Galeria" title="A sala, sem filtro" id="galeria-title">
-          Fotos reais do espaço. Toque para ampliar.
-        </SectionHead>
-        <div className="mq-gallery">
-          {ITEMS.map((photo, i) => (
-            <button
-              key={photo.src}
-              type="button"
-              className="mq-gallery__item"
-              onClick={() => setOpen(i)}
-              aria-label={`Ampliar foto: ${photo.caption}`}
-            >
-              <Picture photo={photo} sizes={SIZES[i]} />
-              <span className="mq-label" aria-hidden="true">
-                {photo.caption}
-              </span>
-            </button>
-          ))}
-        </div>
+    <div id="galeria" className="mq-gallery-block" role="group" aria-labelledby="galeria-title">
+      <div className="mq-gallery-block__head">
+        <h3 id="galeria-title" className="mq-display mq-gallery-block__title">
+          A sala, sem filtro
+        </h3>
+        <p className="mq-muted mb-0">Fotos reais do espaço. Toque para ampliar.</p>
+      </div>
+      <div className="mq-gallery">
+        {ITEMS.map((photo, i) => (
+          <button
+            key={photo.src}
+            type="button"
+            className="mq-gallery__item"
+            onClick={() => setOpen(i)}
+            aria-label={`Ampliar foto: ${photo.caption}`}
+          >
+            <Picture photo={photo} sizes={SIZES[i]} />
+            <span className="mq-label" aria-hidden="true">
+              {photo.caption}
+            </span>
+          </button>
+        ))}
       </div>
       {open !== null && <Lightbox index={open} onChange={setOpen} onClose={() => setOpen(null)} />}
-    </section>
+    </div>
   );
 }
 
