@@ -1,16 +1,15 @@
 // Motor de disponibilidade: única fonte das regras usadas pelo site e pelo painel.
 //
-// A sala é única: reservas confirmadas, pedidos em análise e bloqueios de QUALQUER serviço
-// ocupam o mesmo espaço. O visitante escolhe início e duração dentro dos períodos livres.
+// A sala é única e a agenda é a mesma para qualquer modalidade: reservas confirmadas, pedidos em
+// análise e bloqueios ocupam o espaço para todos. O visitante escolhe início e duração nos períodos livres.
 import type {
   AvailabilitySettings,
   CalendarDay,
   DayAvailability,
   HHMM,
   ISODate,
+  BookingRules,
   Occupation,
-  ServiceSchedule,
-  ServiceType,
   TimeInterval,
   TimelineSegment,
 } from '../types';
@@ -72,15 +71,15 @@ export function bookableRange(settings: AvailabilitySettings, now = new Date()):
   return { first: today, last: zonedNow(settings.timezone, last).date };
 }
 
-/** Normaliza as regras do serviço (evita valores incoerentes vindos do banco). */
-export function serviceRules(cfg: ServiceSchedule): ServiceSchedule {
+/** Normaliza as regras de reserva (evita valores incoerentes vindos do banco). */
+export function normalizeRules(cfg: BookingRules): BookingRules {
   const stepMin = Math.max(15, cfg.stepMin);
   const minDurationMin = Math.max(15, cfg.minDurationMin);
   return { ...cfg, stepMin, minDurationMin, maxDurationMin: Math.max(minDurationMin, cfg.maxDurationMin) };
 }
 
 interface DayPlan {
-  cfg: ServiceSchedule;
+  cfg: BookingRules;
   windows: Range[];
   /** Trechos que já passaram ou ferem a antecedência mínima. */
   cutoff: number;
@@ -90,16 +89,8 @@ interface DayPlan {
   free: Range[];
 }
 
-function planDay(
-  date: ISODate,
-  service: ServiceType,
-  settings: AvailabilitySettings,
-  day: CalendarDay | null | undefined,
-  now: Date,
-): DayPlan | null {
-  const raw = settings.services[service];
-  if (!raw?.enabled) return null;
-  const cfg = serviceRules(raw);
+function planDay(date: ISODate, settings: AvailabilitySettings, day: CalendarDay | null | undefined, now: Date): DayPlan {
+  const cfg = normalizeRules(settings.booking);
   const { date: today, minutes: nowMin } = zonedNow(settings.timezone, now);
   const cutoff = nowMin + Math.max(0, settings.minAdvanceHours) * 60 - diffDays(date, today) * 1440;
 
@@ -125,27 +116,24 @@ function planDay(
   return { cfg, windows, cutoff, booked: [...booked, ...blocks], holds, free };
 }
 
-/** Períodos livres do dia para o serviço (onde cabe pelo menos a duração mínima). */
+/** Períodos livres do dia (onde cabe pelo menos a duração mínima). */
 export function freePeriods(
   date: ISODate,
-  service: ServiceType,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
 ): TimeInterval[] {
-  return planDay(date, service, settings, day, now)?.free.map(toInterval) ?? [];
+  return planDay(date, settings, day, now).free.map(toInterval);
 }
 
 /** Horários em que uma reserva pode começar. */
 export function startTimes(
   date: ISODate,
-  service: ServiceType,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
 ): HHMM[] {
-  const plan = planDay(date, service, settings, day, now);
-  if (!plan) return [];
+  const plan = planDay(date, settings, day, now);
   const out: HHMM[] = [];
   for (const [s, e] of plan.free) {
     for (let t = s; t + plan.cfg.minDurationMin <= e; t += plan.cfg.stepMin) out.push(minutesToTime(t));
@@ -156,14 +144,12 @@ export function startTimes(
 /** Durações possíveis (em minutos) para uma reserva que começa em `start`. */
 export function durationOptions(
   date: ISODate,
-  service: ServiceType,
   start: HHMM,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
 ): number[] {
-  const plan = planDay(date, service, settings, day, now);
-  if (!plan) return [];
+  const plan = planDay(date, settings, day, now);
   const t = timeToMinutes(start);
   const period = plan.free.find(([s, e]) => t >= s && t < e && (t - s) % plan.cfg.stepMin === 0);
   if (!period) return [];
@@ -176,26 +162,23 @@ export function durationOptions(
 /** O período escolhido continua reservável? (usado ao mudar a agenda e na checagem final do envio) */
 export function isBookable(
   date: ISODate,
-  service: ServiceType,
   interval: TimeInterval,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
 ): boolean {
   const duration = timeToMinutes(interval.end) - timeToMinutes(interval.start);
-  return durationOptions(date, service, interval.start, settings, day, now).includes(duration);
+  return durationOptions(date, interval.start, settings, day, now).includes(duration);
 }
 
 /** Linha do tempo do expediente: livre, ocupado, em análise ou indisponível (passado, preparação, sobras). */
 export function dayTimeline(
   date: ISODate,
-  service: ServiceType,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
 ): TimelineSegment[] {
-  const plan = planDay(date, service, settings, day, now);
-  if (!plan) return [];
+  const plan = planDay(date, settings, day, now);
   const points = new Set<number>();
   for (const list of [plan.windows, plan.booked, plan.holds, plan.free]) {
     for (const [s, e] of list) points.add(s).add(e);
@@ -225,7 +208,6 @@ export function dayTimeline(
 
 export function dayAvailability(
   date: ISODate,
-  service: ServiceType,
   settings: AvailabilitySettings,
   day?: CalendarDay | null,
   now = new Date(),
@@ -234,16 +216,16 @@ export function dayAvailability(
   if (date < first) return { state: 'passado', available: 0 };
   if (date > last) return { state: 'fora_da_janela', available: 0 };
   if (!openWindows(date, settings, day).length) return { state: 'fechado', available: 0 };
-  const plan = planDay(date, service, settings, day, now);
-  const available = plan?.free.reduce((sum, [s, e]) => sum + (e - s), 0) ?? 0;
+  const plan = planDay(date, settings, day, now);
+  const available = plan.free.reduce((sum, [s, e]) => sum + (e - s), 0);
   if (available) return { state: 'disponivel', available };
   // Hoje, sem nada livre porque o expediente já passou: "encerrado", não "lotado".
-  if (date === first && plan && plan.windows.every(([, e]) => e <= plan.cutoff)) return { state: 'passado', available: 0 };
+  if (date === first && plan.windows.every(([, e]) => e <= plan.cutoff)) return { state: 'passado', available: 0 };
   return { state: 'lotado', available: 0 };
 }
 
 /**
- * Conflitos de um período com o que já está ocupado ou bloqueado na data — de qualquer serviço.
+ * Conflitos de um período com o que já está ocupado ou bloqueado na data.
  * Usado na confirmação (dentro de uma transação).
  */
 export function findConflicts(

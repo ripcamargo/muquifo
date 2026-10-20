@@ -139,7 +139,7 @@ export async function changeRequestStatus(requestId: string, next: RequestStatus
 
       if (next === 'confirmado') {
         const settings = settingsSnap.exists() ? parseSettings(settingsSnap.data()) : null;
-        const buffer = settings?.services[req.serviceType].bufferMin ?? 0;
+        const buffer = settings?.booking.bufferMin ?? 0;
         const conflicts = findConflicts({ ...day, booked }, occupation, buffer, requestId);
         if (conflicts.length) throw new SlotConflictError(conflicts);
         booked = [...booked, occupation];

@@ -1,6 +1,6 @@
 import { Ban, Undo2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { services } from '../../../config/studio';
+import { serviceInfo } from '../../../config/studio';
 import { saveDayOverrides, type DayOverrides } from '../../../services/availability';
 import { friendlyError } from '../../../services/firebase/errors';
 import type { AvailabilitySettings, BlockReason, CalendarDay, DayMode, ISODate, TimeInterval } from '../../../types';
@@ -74,6 +74,7 @@ export function DayEditor({ date, settings, day }: Props) {
       : validateIntervals(draft.mode === 'especial' ? draft.intervals : []) ?? validateIntervals(draft.extraIntervals);
 
   const previewDay: CalendarDay = { ...remote, ...draft };
+  const previewSegments = dayTimeline(date, settings, previewDay, PREVIEW_NOW);
   const occupations = [
     ...remote.booked.map((o) => ({ ...o, kind: 'Confirmado' })),
     ...remote.holds.map((o) => ({ ...o, kind: 'Em análise' })),
@@ -239,7 +240,7 @@ export function DayEditor({ date, settings, day }: Props) {
               return (
                 <li key={o.ref + o.kind}>
                   <span>
-                    {formatTimeRange(o.start, o.end)} · {req?.name ?? 'Pedido'} · <span className="mq-muted">{o.kind}</span>
+                    {formatTimeRange(o.start, o.end)} · {req?.name ?? 'Pedido'} · {serviceInfo(o.service).name} · <span className="mq-muted">{o.kind}</span>
                   </span>
                   {req && (
                     <Button variant="ghost" size="sm" onClick={() => openRequest(req.id)}>
@@ -255,27 +256,18 @@ export function DayEditor({ date, settings, day }: Props) {
 
       <div className="mb-4">
         <div className="mq-label mq-muted mb-2">Prévia do que o site vai oferecer</div>
-        {services.map((s) => {
-          if (!settings.services[s.id].enabled) return null;
-          const segments = dayTimeline(date, s.id, settings, previewDay, PREVIEW_NOW);
-          return (
-            <div key={s.id} className="mb-2">
-              <div style={{ fontSize: '0.875rem', marginBottom: 4 }}>{s.name}</div>
-              <div className="adm-preview">
-                {segments.length ? (
-                  segments.map((p) => (
-                    <span key={p.start} className={p.state !== 'livre' ? 'is-taken' : ''}>
-                      {formatTime(p.start)}–{formatTime(p.end)}
-                      {p.state !== 'livre' && ' · ' + SEGMENT_TEXT[p.state]}
-                    </span>
-                  ))
-                ) : (
-                  <span className="is-taken">Fechado</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        <div className="adm-preview">
+          {previewSegments.length ? (
+            previewSegments.map((p) => (
+              <span key={p.start} className={p.state !== 'livre' ? 'is-taken' : ''}>
+                {formatTime(p.start)}–{formatTime(p.end)}
+                {p.state !== 'livre' && ' · ' + SEGMENT_TEXT[p.state]}
+              </span>
+            ))
+          ) : (
+            <span className="is-taken">Fechado</span>
+          )}
+        </div>
       </div>
 
       {!past && (

@@ -28,27 +28,27 @@ export function StepTime({ draft, update, goTo, availability, onContinue, slotLo
   const { periods, starts, timeline } = useMemo(() => {
     if (!settings) return { periods: [], starts: [], timeline: [] };
     return {
-      periods: freePeriods(date, service, settings, day),
-      starts: startTimes(date, service, settings, day),
-      timeline: dayTimeline(date, service, settings, day),
+      periods: freePeriods(date, settings, day),
+      starts: startTimes(date, settings, day),
+      timeline: dayTimeline(date, settings, day),
     };
-  }, [settings, day, date, service]);
+  }, [settings, day, date]);
 
   const selected = draft.slot;
   const durations = useMemo(
-    () => (settings && selected ? durationOptions(date, service, selected.start, settings, day) : []),
-    [settings, day, date, service, selected],
+    () => (settings && selected ? durationOptions(date, selected.start, settings, day) : []),
+    [settings, day, date, selected],
   );
   const currentDuration = selected ? timeToMinutes(selected.end) - timeToMinutes(selected.start) : 0;
 
   // Se o período escolhido deixar de estar livre enquanto a pessoa decide, desmarca e avisa.
   useEffect(() => {
     if (status !== 'ready' || !settings || !selected) return;
-    if (!isBookable(date, service, selected, settings, day)) {
+    if (!isBookable(date, selected, settings, day)) {
       update({ slot: null });
       setLostNotice(true);
     }
-  }, [status, settings, day, date, service, selected, update]);
+  }, [status, settings, day, date, selected, update]);
 
   const choose = (start: HHMM, duration: number) => {
     setLostNotice(false);
@@ -57,13 +57,13 @@ export function StepTime({ draft, update, goTo, availability, onContinue, slotLo
 
   const pickStart = (start: HHMM) => {
     if (!settings) return;
-    const options = durationOptions(date, service, start, settings, day);
+    const options = durationOptions(date, start, settings, day);
     // Mantém a duração escolhida se ainda couber; senão, a maior possível até ela.
     const keep = options.filter((d) => d <= (currentDuration || options[0])).pop() ?? options[0];
     choose(start, keep);
   };
 
-  const rules = settings?.services[service];
+  const rules = settings?.booking;
 
   return (
     <div>

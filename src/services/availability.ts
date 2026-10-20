@@ -16,7 +16,7 @@ import {
   type DayMode,
   type ISODate,
   type Occupation,
-  type ServiceSchedule,
+  type BookingRules,
   type ServiceType,
   type TimeInterval,
 } from '../types';
@@ -36,11 +36,9 @@ const intervals = (value: unknown): TimeInterval[] =>
 
 const BLOCK_REASONS: BlockReason[] = ['pessoal', 'manutencao', 'compromisso', 'outro'];
 
-function service(value: unknown): ServiceSchedule {
+function bookingRules(value: unknown): BookingRules {
   const v = (value ?? {}) as Record<string, unknown>;
   return {
-    enabled: v.enabled !== false,
-    // Formato antigo (sessão de duração fixa) vira mínimo = máximo = duração.
     minDurationMin: Math.max(15, num(v.minDurationMin, num(v.durationMin, 60))),
     maxDurationMin: Math.max(15, num(v.maxDurationMin, num(v.durationMin, 240))),
     stepMin: Math.max(15, num(v.stepMin, 60)),
@@ -52,11 +50,12 @@ export function parseSettings(data: Record<string, unknown>): AvailabilitySettin
   const weeklyRaw = (data.weekly ?? {}) as Record<string, unknown>;
   const weekly: Record<string, TimeInterval[]> = {};
   for (let d = 0; d < 7; d++) weekly[String(d)] = intervals(weeklyRaw[String(d)]);
-  const servicesRaw = (data.services ?? {}) as Record<string, unknown>;
+  // Versões anteriores guardavam regras por serviço; nesse caso aproveita as do ensaio.
+  const legacy = ((data.services ?? {}) as Record<string, unknown>).ensaio;
   return {
     timezone: str(data.timezone, STUDIO_TIMEZONE) || STUDIO_TIMEZONE,
     weekly,
-    services: Object.fromEntries(SERVICE_TYPES.map((t) => [t, service(servicesRaw[t])])) as Record<ServiceType, ServiceSchedule>,
+    booking: bookingRules(data.booking ?? legacy),
     minAdvanceHours: Math.max(0, num(data.minAdvanceHours, 0)),
     maxDaysAhead: Math.min(365, Math.max(1, num(data.maxDaysAhead, 60))),
   };

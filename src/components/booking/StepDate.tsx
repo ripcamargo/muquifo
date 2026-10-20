@@ -1,6 +1,5 @@
 import { CalendarX } from 'lucide-react';
 import { useMemo } from 'react';
-import { serviceInfo } from '../../config/studio';
 import type { useAvailability } from '../../hooks/useAvailability';
 import type { ISODate } from '../../types';
 import { addDays, addMonths, formatDateLong, formatDuration, formatMonth, monthOf, monthRange, zonedNow } from '../../utils/datetime';
@@ -19,7 +18,6 @@ interface Props extends StepProps {
 
 export function StepDate({ draft, goTo, availability, month, setMonth, onPick }: Props) {
   const { settings, days, status } = availability;
-  const service = draft.service!;
   const now = new Date();
   const today = zonedNow(settings?.timezone, now).date;
 
@@ -29,7 +27,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
     return (date: ISODate): DayView => {
       const label = formatDateLong(date);
       if (!settings) return { enabled: false, label };
-      const a = dayAvailability(date, service, settings, days.get(date), now);
+      const a = dayAvailability(date, settings, days.get(date), now);
       switch (a.state) {
         case 'disponivel':
           return {
@@ -46,7 +44,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
       }
     };
     // `now` fica de fora de propósito: a agenda é recalculada quando os dados mudam.
-  }, [settings, days, service]);
+  }, [settings, days]);
 
   const freeThisMonth = useMemo(() => {
     if (status !== 'ready') return 0;
@@ -63,7 +61,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
     <div>
       <StepTitle>Escolha o dia</StepTitle>
       <p className="mq-wizard__lead">
-        Dias com marcação têm período livre para <strong>{serviceInfo(service).name.toLowerCase()}</strong>. Você escolhe a duração no próximo passo.
+        Dias com marcação têm horário livre. Você escolhe o início e a duração no próximo passo.
       </p>
 
       <AvailabilityGate status={status} error={availability.error} retry={availability.retry}>

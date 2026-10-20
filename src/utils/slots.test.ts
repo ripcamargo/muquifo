@@ -26,11 +26,7 @@ const settings: AvailabilitySettings = {
     '5': [],
     '6': [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }],
   },
-  services: {
-    ensaio: { enabled: true, minDurationMin: 60, maxDurationMin: 240, stepMin: 60, bufferMin: 0 },
-    gravacao: { enabled: true, minDurationMin: 60, maxDurationMin: 360, stepMin: 60, bufferMin: 30 },
-    locacao: { enabled: true, minDurationMin: 120, maxDurationMin: 480, stepMin: 60, bufferMin: 0 },
-  },
+  booking: { minDurationMin: 60, maxDurationMin: 240, stepMin: 60, bufferMin: 0 },
   minAdvanceHours: 12,
   maxDaysAhead: 60,
 };
@@ -83,69 +79,64 @@ describe('expediente', () => {
   });
 });
 
+const withBuffer = { ...settings, booking: { ...settings.booking, bufferMin: 30 } };
+
 describe('duração flexível', () => {
   it('mostra os períodos livres e os inícios possíveis', () => {
-    expect(periods(SAT, 'ensaio', settings, null, NOW)).toEqual(['09:00-13:00', '14:00-18:00']);
-    expect(startTimes(SAT, 'ensaio', settings, null, NOW)).toEqual(['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00']);
-    // Locação exige no mínimo 2h: 12h e 17h não cabem.
-    expect(startTimes(SAT, 'locacao', settings, null, NOW)).toEqual(['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']);
+    expect(periods(SAT, settings, null, NOW)).toEqual(['09:00-13:00', '14:00-18:00']);
+    expect(startTimes(SAT, settings, null, NOW)).toEqual(['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00']);
   });
 
-  it('oferece de 1h até o fim do período ou o máximo do serviço', () => {
-    expect(durationOptions(SAT, 'ensaio', '09:00', settings, null, NOW)).toEqual([60, 120, 180, 240]);
-    expect(durationOptions(SAT, 'ensaio', '10:00', settings, null, NOW)).toEqual([60, 120, 180]);
-    expect(durationOptions(SAT, 'locacao', '14:00', settings, null, NOW)).toEqual([120, 180, 240]);
+  it('oferece da duração mínima até o fim do período ou o máximo', () => {
+    expect(durationOptions(SAT, '09:00', settings, null, NOW)).toEqual([60, 120, 180, 240]);
+    expect(durationOptions(SAT, '10:00', settings, null, NOW)).toEqual([60, 120, 180]);
     // Início fora da grade ou dentro de trecho fechado não tem duração possível.
-    expect(durationOptions(SAT, 'ensaio', '13:00', settings, null, NOW)).toEqual([]);
-    expect(durationOptions(SAT, 'ensaio', '09:30', settings, null, NOW)).toEqual([]);
+    expect(durationOptions(SAT, '13:00', settings, null, NOW)).toEqual([]);
+    expect(durationOptions(SAT, '09:30', settings, null, NOW)).toEqual([]);
   });
 
-  it('respeita o máximo do serviço mesmo com o dia todo livre', () => {
+  it('respeita o máximo mesmo com o dia todo livre, e o mínimo', () => {
     const long = day({ mode: 'especial', intervals: [{ start: '08:00', end: '23:00' }] });
-    expect(Math.max(...durationOptions(SAT, 'ensaio', '08:00', settings, long, NOW))).toBe(240);
-    expect(Math.max(...durationOptions(SAT, 'locacao', '08:00', settings, long, NOW))).toBe(480);
+    expect(Math.max(...durationOptions(SAT, '08:00', settings, long, NOW))).toBe(240);
+    const twoHoursMin = { ...settings, booking: { ...settings.booking, minDurationMin: 120 } };
+    expect(startTimes(SAT, twoHoursMin, null, NOW)).toEqual(['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']);
   });
 
   it('valida o período escolhido', () => {
-    expect(isBookable(SAT, 'ensaio', { start: '14:00', end: '17:00' }, settings, null, NOW)).toBe(true);
-    expect(isBookable(SAT, 'ensaio', { start: '15:00', end: '16:30' }, settings, null, NOW)).toBe(false); // fora da grade
-    expect(isBookable(SAT, 'ensaio', { start: '12:00', end: '14:00' }, settings, null, NOW)).toBe(false); // atravessa o intervalo
-    expect(isBookable(SAT, 'ensaio', { start: '09:00', end: '14:00' }, settings, null, NOW)).toBe(false); // acima do máximo
-    expect(isBookable(SAT, 'locacao', { start: '14:00', end: '15:00' }, settings, null, NOW)).toBe(false); // abaixo do mínimo
+    expect(isBookable(SAT, { start: '14:00', end: '17:00' }, settings, null, NOW)).toBe(true);
+    expect(isBookable(SAT, { start: '15:00', end: '16:30' }, settings, null, NOW)).toBe(false); // fora da grade
+    expect(isBookable(SAT, { start: '12:00', end: '14:00' }, settings, null, NOW)).toBe(false); // atravessa o intervalo
+    expect(isBookable(SAT, { start: '09:00', end: '14:00' }, settings, null, NOW)).toBe(false); // acima do máximo
   });
 
   it('respeita a antecedência mínima e esconde o que já passou', () => {
     // Hoje (terça) 08:00 + 12h = 20:00 → só sobra 20h–22h.
-    expect(startTimes('2026-10-20', 'ensaio', settings, null, NOW)).toEqual(['20:00', '21:00']);
-    expect(durationOptions('2026-10-20', 'ensaio', '20:00', settings, null, NOW)).toEqual([60, 120]);
-  });
-
-  it('serviço pausado não gera horários', () => {
-    const paused = { ...settings, services: { ...settings.services, gravacao: { ...settings.services.gravacao, enabled: false } } };
-    expect(startTimes(SAT, 'gravacao', paused, null, NOW)).toEqual([]);
+    expect(startTimes('2026-10-20', settings, null, NOW)).toEqual(['20:00', '21:00']);
+    expect(durationOptions('2026-10-20', '20:00', settings, null, NOW)).toEqual([60, 120]);
   });
 });
 
-describe('sala única: uma reserva ocupa todos os serviços', () => {
-  const ensaioConfirmado = day({ booked: [{ ref: 'a', start: '10:00', end: '12:00', service: 'ensaio' }] });
-
-  it('reserva de ensaio bloqueia gravação e locação no mesmo período', () => {
-    expect(periods(SAT, 'ensaio', settings, ensaioConfirmado, NOW)).toEqual(['09:00-10:00', '12:00-13:00', '14:00-18:00']);
-    // Gravação tem 30 min de preparação: a manhã inteira fica sem espaço para 1h.
-    expect(periods(SAT, 'gravacao', settings, ensaioConfirmado, NOW)).toEqual(['14:00-18:00']);
-    // Locação exige 2h: as sobras de 1h somem.
-    expect(periods(SAT, 'locacao', settings, ensaioConfirmado, NOW)).toEqual(['14:00-18:00']);
-    expect(isBookable(SAT, 'locacao', { start: '10:00', end: '12:00' }, settings, ensaioConfirmado, NOW)).toBe(false);
+describe('sala única: a modalidade não muda a agenda', () => {
+  it('uma reserva de qualquer modalidade ocupa o período para todos', () => {
+    for (const service of ['ensaio', 'gravacao', 'locacao'] as const) {
+      const d = day({ booked: [{ ref: 'a', start: '10:00', end: '12:00', service }] });
+      expect(periods(SAT, settings, d, NOW)).toEqual(['09:00-10:00', '12:00-13:00', '14:00-18:00']);
+      expect(isBookable(SAT, { start: '10:00', end: '12:00' }, settings, d, NOW)).toBe(false);
+    }
   });
 
-  it('pedido em análise e bloqueio também valem para todos', () => {
+  it('a preparação entre reservas vale para todos', () => {
+    const d = day({ booked: [{ ref: 'a', start: '10:00', end: '12:00', service: 'locacao' }] });
+    // 30 min de folga: a manhã inteira fica sem espaço para 1h.
+    expect(periods(SAT, withBuffer, d, NOW)).toEqual(['14:00-18:00']);
+  });
+
+  it('pedido em análise e bloqueio também ocupam a sala', () => {
     const d = day({
       holds: [{ ref: 'b', start: '14:00', end: '16:00', service: 'gravacao' }],
       blocks: [{ id: 'x', start: '09:00', end: '13:00', reason: 'pessoal' }],
     });
-    for (const service of ['ensaio', 'locacao'] as const) {
-      expect(periods(SAT, service, settings, d, NOW)).toEqual(['16:00-18:00']);
-    }
+    expect(periods(SAT, settings, d, NOW)).toEqual(['16:00-18:00']);
   });
 
   it('a linha do tempo mostra ocupado, em análise e livre', () => {
@@ -153,7 +144,7 @@ describe('sala única: uma reserva ocupa todos os serviços', () => {
       booked: [{ ref: 'a', start: '10:00', end: '12:00', service: 'locacao' }],
       holds: [{ ref: 'b', start: '15:00', end: '16:00', service: 'gravacao' }],
     });
-    expect(dayTimeline(SAT, 'ensaio', settings, d, NOW).map((s) => `${s.start}-${s.end}:${s.state}`)).toEqual([
+    expect(dayTimeline(SAT, settings, d, NOW).map((s) => `${s.start}-${s.end}:${s.state}`)).toEqual([
       '09:00-10:00:livre',
       '10:00-12:00:ocupado',
       '12:00-13:00:livre',
@@ -166,13 +157,12 @@ describe('sala única: uma reserva ocupa todos os serviços', () => {
 
 describe('estado do dia no calendário', () => {
   it('classifica passado, fechado, lotado, disponível e fora da janela', () => {
-    expect(dayAvailability('2026-10-19', 'ensaio', settings, null, NOW).state).toBe('passado');
-    expect(dayAvailability('2026-10-21', 'ensaio', settings, null, NOW).state).toBe('fechado');
-    expect(dayAvailability(TUE_NEXT, 'ensaio', settings, null, NOW)).toEqual({ state: 'disponivel', available: 240 });
+    expect(dayAvailability('2026-10-19', settings, null, NOW).state).toBe('passado');
+    expect(dayAvailability('2026-10-21', settings, null, NOW).state).toBe('fechado');
+    expect(dayAvailability(TUE_NEXT, settings, null, NOW)).toEqual({ state: 'disponivel', available: 240 });
     const full = day({ booked: [{ ref: 'a', start: '18:00', end: '22:00', service: 'gravacao' }] }, TUE_NEXT);
-    expect(dayAvailability(TUE_NEXT, 'ensaio', settings, full, NOW).state).toBe('lotado');
-    expect(dayAvailability(TUE_NEXT, 'locacao', settings, full, NOW).state).toBe('lotado');
-    expect(dayAvailability('2027-02-02', 'ensaio', settings, null, NOW).state).toBe('fora_da_janela');
+    expect(dayAvailability(TUE_NEXT, settings, full, NOW).state).toBe('lotado');
+    expect(dayAvailability('2027-02-02', settings, null, NOW).state).toBe('fora_da_janela');
   });
 });
 

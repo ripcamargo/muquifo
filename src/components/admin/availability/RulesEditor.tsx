@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { services } from '../../../config/studio';
-import type { AvailabilitySettings, ServiceSchedule, ServiceType } from '../../../types';
+import type { AvailabilitySettings, BookingRules } from '../../../types';
 import { formatDuration, formatTime, formatTimeRange, weekdayName } from '../../../utils/datetime';
 import { freePeriods, startTimes } from '../../../utils/slots';
 import { Field } from '../../ui/Field';
@@ -31,58 +30,48 @@ function NumberInput({ value, onChange, min, max, step }: { value: number; onCha
 
 export function RulesEditor({ settings, onChange }: Props) {
   const [previewDay, setPreviewDay] = useState(6);
+  const rules = settings.booking;
+  const setRules = (patch: Partial<BookingRules>) => onChange({ ...settings, booking: { ...rules, ...patch } });
 
-  const setService = (id: ServiceType, patch: Partial<ServiceSchedule>) =>
-    onChange({ ...settings, services: { ...settings.services, [id]: { ...settings.services[id], ...patch } } });
+  const date = PREVIEW_DATES[previewDay];
+  const periods = freePeriods(date, settings, null, PREVIEW_NOW);
+  const starts = startTimes(date, settings, null, PREVIEW_NOW);
 
   return (
     <>
-      <p className="mq-muted" style={{ fontSize: '0.9375rem' }}>
-        A sala é uma só: qualquer reserva confirmada, pedido em análise ou bloqueio ocupa o período para todos os
-        serviços. O cliente escolhe o início e quantas horas quer, dentro dos limites abaixo.
-      </p>
-
-      {services.map((s) => {
-        const cfg = settings.services[s.id];
-        const date = PREVIEW_DATES[previewDay];
-        const periods = freePeriods(date, s.id, settings, null, PREVIEW_NOW);
-        const starts = startTimes(date, s.id, settings, null, PREVIEW_NOW);
-        return (
-          <section className="adm-card" key={s.id}>
-            <div className="adm-card__head">
-              <h2>{s.name}</h2>
-              <label className="adm-switch">
-                <input type="checkbox" checked={cfg.enabled} onChange={(e) => setService(s.id, { enabled: e.target.checked })} />
-                {cfg.enabled ? 'Aceitando pedidos' : 'Pausado'}
-              </label>
-            </div>
-            <div className="adm-form-grid adm-form-grid--4">
-              <Field label="Duração mínima" note="min" hint={formatDuration(cfg.minDurationMin)}>
-                <NumberInput value={cfg.minDurationMin} min={15} max={720} step={15} onChange={(n) => setService(s.id, { minDurationMin: n })} />
-              </Field>
-              <Field label="Duração máxima" note="min" hint={formatDuration(cfg.maxDurationMin)}>
-                <NumberInput value={cfg.maxDurationMin} min={15} max={1440} step={15} onChange={(n) => setService(s.id, { maxDurationMin: n })} />
-              </Field>
-              <Field label="De quanto em quanto" note="min" hint="60 → 18h, 19h… e 1h, 2h, 3h…">
-                <NumberInput value={cfg.stepMin} min={15} max={240} step={15} onChange={(n) => setService(s.id, { stepMin: n })} />
-              </Field>
-              <Field label="Preparação entre reservas" note="min" hint="Folga antes e depois de outra reserva">
-                <NumberInput value={cfg.bufferMin} min={0} max={240} step={5} onChange={(n) => setService(s.id, { bufferMin: n })} />
-              </Field>
-            </div>
-            <div className="mq-label mq-muted mb-2">Prévia · {weekdayName(previewDay)} sem reservas</div>
-            {cfg.enabled && periods.length ? (
-              <p className="mb-0" style={{ fontSize: '0.9375rem' }}>
-                Livre {periods.map((p) => formatTimeRange(p.start, p.end)).join(' · ')}. Inícios:{' '}
-                {starts.map(formatTime).join(', ')}. Duração de {formatDuration(cfg.minDurationMin)} até{' '}
-                {formatDuration(cfg.maxDurationMin)} (limitada ao fim do expediente).
-              </p>
-            ) : (
-              <p className="mq-muted mb-0">{cfg.enabled ? 'Nenhum horário nesse dia.' : 'Serviço pausado: não aparece no site.'}</p>
-            )}
-          </section>
-        );
-      })}
+      <section className="adm-card">
+        <div className="adm-card__head">
+          <h2>Reservas da sala</h2>
+        </div>
+        <p className="mq-muted" style={{ fontSize: '0.9375rem' }}>
+          Valem para qualquer pedido — ensaio, gravação ou locação. A modalidade é só informativa, para você preparar a
+          sala. O cliente escolhe o início e quantas horas quer, dentro destes limites.
+        </p>
+        <div className="adm-form-grid adm-form-grid--4">
+          <Field label="Duração mínima" note="min" hint={formatDuration(rules.minDurationMin)}>
+            <NumberInput value={rules.minDurationMin} min={15} max={720} step={15} onChange={(n) => setRules({ minDurationMin: n })} />
+          </Field>
+          <Field label="Duração máxima" note="min" hint={formatDuration(rules.maxDurationMin)}>
+            <NumberInput value={rules.maxDurationMin} min={15} max={1440} step={15} onChange={(n) => setRules({ maxDurationMin: n })} />
+          </Field>
+          <Field label="De quanto em quanto" note="min" hint="60 → 18h, 19h… e 1h, 2h, 3h…">
+            <NumberInput value={rules.stepMin} min={15} max={240} step={15} onChange={(n) => setRules({ stepMin: n })} />
+          </Field>
+          <Field label="Preparação entre reservas" note="min" hint="Folga antes e depois de outra reserva">
+            <NumberInput value={rules.bufferMin} min={0} max={240} step={5} onChange={(n) => setRules({ bufferMin: n })} />
+          </Field>
+        </div>
+        <div className="mq-label mq-muted mb-2">Prévia · {weekdayName(previewDay)} sem reservas</div>
+        {periods.length ? (
+          <p className="mb-0" style={{ fontSize: '0.9375rem' }}>
+            Livre {periods.map((p) => formatTimeRange(p.start, p.end)).join(' · ')}. Inícios: {starts.map(formatTime).join(', ')}.
+            Duração de {formatDuration(rules.minDurationMin)} até {formatDuration(rules.maxDurationMin)} (limitada ao fim do
+            expediente).
+          </p>
+        ) : (
+          <p className="mq-muted mb-0">Nenhum horário nesse dia.</p>
+        )}
+      </section>
 
       <section className="adm-card">
         <div className="adm-card__head">

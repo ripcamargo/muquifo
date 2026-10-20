@@ -35,9 +35,9 @@ Outros comandos:
 ### Fluxo do visitante
 
 1. **Contato** — nome e WhatsApp. Ao continuar, o **lead é gravado imediatamente** (`leads/{sessão}`, status `novo`). Nada é reservado.
-2. **Serviço** — ensaio, gravação ou locação de sala (podcast, ensaio fotográfico etc.). Se a pessoa veio do botão de um serviço, ele já vem marcado.
+2. **Modalidade** — ensaio, gravação ou locação de sala (podcast, ensaio fotográfico etc.). É **só informativa**, para você preparar a sala: a agenda e as regras de horário são as mesmas para todas. Se a pessoa veio do botão de uma modalidade, ela já vem marcada.
 3. **Dia** — calendário em tempo real a partir do Firestore. Dias passados, fechados, lotados ou fora da janela não podem ser escolhidos.
-4. **Horário** — uma linha do tempo mostra o dia (*livre*, *ocupado*, *em análise*, *indisponível*) e a lista dos períodos livres. A pessoa escolhe **a que horas começa** e **quantas horas quer** (ex.: 1h ou 5h seguidas), dentro da duração mínima e máxima do serviço e sem passar do fim do período livre.
+4. **Horário** — uma linha do tempo mostra o dia (*livre*, *ocupado*, *em análise*, *indisponível*) e a lista dos períodos livres. A pessoa escolhe **a que horas começa** e **quantas horas quer** (ex.: 1h ou 5h seguidas), dentro da duração mínima e máxima configuradas e sem passar do fim do período livre.
 5. **Detalhes** — todos opcionais, e variam por serviço.
 6. **Revisão** — resumo com "alterar" em cada linha.
 7. **Envio** — confere de novo no servidor se o horário segue livre, grava o pedido como `pedido_preparado` e abre `wa.me/5515998110938` com a mensagem pronta.
@@ -67,8 +67,8 @@ Só o administrador muda o status a partir de `aguardando_confirmacao`. O site n
 ### Disponibilidade (painel → Disponibilidade)
 
 - **Semana:** dias e intervalos habituais. Um dia pode ter vários intervalos.
-- **Regras de horário (por serviço):** duração mínima e máxima, de quanto em quanto andam inícios e durações (ex.: 60 min → 18h, 19h… e 1h, 2h…), tempo de preparação entre reservas e se o serviço está aceitando pedidos. Também a antecedência mínima e quantos dias à frente a agenda fica aberta. Nenhuma reserva ultrapassa o fim do expediente. Há uma prévia do que o site vai oferecer.
-- **Sala única:** reservas confirmadas, pedidos em análise e bloqueios de **qualquer** serviço ocupam o período para todos. Uma locação confirmada das 14h às 17h deixa esse período indisponível também para ensaio e gravação.
+- **Regras de horário (um único configurador para qualquer modalidade):** duração mínima e máxima, de quanto em quanto andam inícios e durações (ex.: 60 min → 18h, 19h… e 1h, 2h…) e tempo de preparação entre reservas. Também a antecedência mínima e quantos dias à frente a agenda fica aberta. Nenhuma reserva ultrapassa o fim do expediente. Há uma prévia do que o site vai oferecer.
+- **Sala única:** reservas confirmadas, pedidos em análise e bloqueios ocupam o período para qualquer pessoa, seja qual for a modalidade. Uma locação confirmada das 14h às 17h deixa esse período indisponível para todos.
 - **Datas e bloqueios:** em cada data dá para seguir a semana (com intervalos extras), usar um horário especial ou fechar o dia, além de criar bloqueios de período (uso pessoal, manutenção, compromisso) e reabri-los. Também é possível fechar ou restaurar vários dias de uma vez. **As exceções da data sempre prevalecem sobre a semana.**
 
 Enquanto você não clicar em **"Publicar agenda"** pela primeira vez, o site mostra "agenda ainda não aberta" com o botão de WhatsApp. Não existe nenhuma disponibilidade fixa no código.
@@ -127,7 +127,7 @@ Outras hospedagens: `public/_redirects` cobre Netlify e Cloudflare Pages. Em qua
 
 Tudo fica em **`src/config/studio.ts`**: textos do hero e do "sobre", cidade, equipamentos, diferenciais, tipos de trabalho, WhatsApp e serviços (ensaio, gravação e locação de sala). Itens marcados com `[CONFIRMAR]` são provisórios. Listas vazias simplesmente não aparecem no site.
 
-- **Novo serviço:** adicione em `services` (`studio.ts`), em `ServiceType` e `SERVICE_TYPES` (`src/types`), nas regras (`validService` em `firestore.rules`) e nos valores de exemplo (`src/config/availabilityDefaults.ts`).
+- **Novo serviço:** adicione em `services` (`studio.ts`), em `ServiceType` e `SERVICE_TYPES` (`src/types`), nas regras (`validService` em `firestore.rules`) (a agenda não muda: a modalidade é só informativa).
 - **Fotos:** troque os arquivos em `assets-src/` e rode `npm run images`.
 - **Política de privacidade:** `src/pages/PrivacyPage.tsx`. Ao mudar o texto, atualize `privacy.version` em `studio.ts`, porque cada lead grava a versão que viu.
 

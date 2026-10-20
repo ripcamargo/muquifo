@@ -61,9 +61,9 @@ export function StepReview({ draft, update, goTo, onSlotLost }: Props) {
     }
 
     try {
-      // 1. Confere de novo, direto no servidor, se o período segue livre (para qualquer serviço: a sala é única).
+      // 1. Confere de novo, direto no servidor, se o período segue livre (a sala é única para qualquer modalidade).
       const fresh = await fetchAvailabilityFresh(date);
-      if (!fresh.settings || !isBookable(date, service, slot, fresh.settings, fresh.day)) {
+      if (!fresh.settings || !isBookable(date, slot, fresh.settings, fresh.day)) {
         win?.close();
         update({ slot: null });
         onSlotLost();

@@ -12,9 +12,11 @@ export interface TimeInterval {
   end: HHMM;
 }
 
-/** Regras de horário de um serviço. A pessoa escolhe início e duração dentro dos períodos livres. */
-export interface ServiceSchedule {
-  enabled: boolean;
+/**
+ * Regras de reserva da sala — as mesmas para qualquer modalidade (ensaio, gravação, locação).
+ * A pessoa escolhe início e duração dentro dos períodos livres.
+ */
+export interface BookingRules {
   /** Menor reserva aceita, em minutos. */
   minDurationMin: number;
   /** Maior reserva aceita, em minutos. */
@@ -31,7 +33,7 @@ export type WeeklySchedule = Record<string, TimeInterval[]>;
 export interface AvailabilitySettings {
   timezone: string;
   weekly: WeeklySchedule;
-  services: Record<ServiceType, ServiceSchedule>;
+  booking: BookingRules;
   /** Antecedência mínima, em horas, entre agora e o início de uma sessão. */
   minAdvanceHours: number;
   /** Quantos dias à frente o calendário público mostra. */

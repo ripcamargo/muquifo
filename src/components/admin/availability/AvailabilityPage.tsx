@@ -25,11 +25,10 @@ function validateSettings(s: AvailabilitySettings): string | null {
     const err = validateIntervals(s.weekly[String(d)] ?? []);
     if (err) return err;
   }
-  for (const svc of Object.values(s.services)) {
-    if (svc.minDurationMin < 15) return 'A duração mínima precisa ser de pelo menos 15 minutos.';
-    if (svc.maxDurationMin < svc.minDurationMin) return 'A duração máxima não pode ser menor que a mínima.';
-    if (svc.stepMin < 15) return 'O passo dos horários precisa ser de pelo menos 15 minutos.';
-  }
+  const b = s.booking;
+  if (b.minDurationMin < 15) return 'A duração mínima precisa ser de pelo menos 15 minutos.';
+  if (b.maxDurationMin < b.minDurationMin) return 'A duração máxima não pode ser menor que a mínima.';
+  if (b.stepMin < 15) return 'O passo dos horários precisa ser de pelo menos 15 minutos.';
   if (s.maxDaysAhead < 1 || s.maxDaysAhead > 365) return 'A janela de agendamento deve ficar entre 1 e 365 dias.';
   return null;
 }
