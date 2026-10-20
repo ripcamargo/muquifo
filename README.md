@@ -119,6 +119,14 @@ npx firebase-tools deploy --only hosting
 
 O `firebase.json` já tem o *rewrite* de SPA (`/admin` e `/privacidade` funcionam ao recarregar a página), cache longo para `/assets`, `noindex` no painel e cabeçalhos básicos de segurança.
 
+### Vercel
+
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório do GitHub. O `vercel.json` já define Vite, `npm run build`, a pasta `dist` e o redirecionamento de SPA (`/admin` e `/privacidade` funcionam ao recarregar).
+2. Em **Environment Variables**, cadastre os mesmos valores do `.env.local`: todas as `VITE_FIREBASE_*` e `VITE_SITE_URL` com o endereço final (ex.: `https://muquifo.vercel.app`). Deixe `VITE_USE_FIREBASE_EMULATORS` sem definir.
+3. **Deploy.** A cada push na `main`, a Vercel publica de novo sozinha.
+4. No Firebase: *Authentication → Settings → Authorized domains* → adicione o domínio da Vercel (`muquifo.vercel.app` e o domínio próprio, se houver). Sem isso o login do painel e a sessão do visitante falham.
+5. As regras do Firestore continuam sendo publicadas pelo Firebase CLI (seção 3).
+
 Outras hospedagens: `public/_redirects` cobre Netlify e Cloudflare Pages. Em qualquer outra, configure "todas as rotas → `/index.html`". Defina `VITE_SITE_URL` com o endereço final para as prévias de compartilhamento (Open Graph).
 
 ---

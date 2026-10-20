@@ -16,37 +16,38 @@ export const studio = {
   whatsappDisplay: '+55 15 99811-0938',
 
   hero: {
-    eyebrow: 'Home studio · Ensaios, gravações e locação',
-    titleLines: ['Liga o amp.', 'A sala é sua.'],
+    eyebrow: 'Homestudio · Ensaios, gravinas e viagens espaciais',
+    titleLines: ['Chega mais,', 'A sala é sua.'],
     subtitle:
-      'Reserve a sala para ensaiar, gravar ou tocar o seu projeto — de 1 hora a uma tarde inteira. Escolha o dia, veja os períodos livres e envie o pedido pelo WhatsApp.',
+      'Estúdio disponível para ensaios, gravações, podcasts, ensaios fotográficos e o que mais der na telha. Tudo pronto para você sem complicação.',
   },
 
   about: {
-    title: 'Um muquifo feito pra tocar',
+    title: 'Muquifo aconchegante e acessível pra tua arte',
     // [CONFIRMAR] Texto provisório — conte a história do estúdio com suas palavras.
     paragraphs: [
-      'O Muquifo é um home studio montado para quem quer tocar sem complicação: chegar, ligar os cabos e fazer barulho.',
-      'Paredes revestidas, luz baixa e os equipamentos prontos na sala. Um espaço pequeno, de verdade, pensado para ensaios e gravações.',
+      'O Muquifo é um homestudio localizado em Sorocaba/SP projetado com muito carinho (e bastante calma) para quem quer tocar seus projetos sem complicação: é chegar, ligar os cabos e fazer barulho.',
+      'Paredes tratadas, isolamento acústico, luz baixa e os equipamentos prontos na sala. Um espaço pequeno, de verdade, pensado para ensaios e gravações.',
+      'Estúdio de bairro, com preço acessível e sem frescura. Muitas histórias desde 2017, que agora passa a ser aberta ao público. Cola com a gente!',
     ],
     /** [CONFIRMAR] Cidade/região de atendimento. Ex.: 'Sorocaba – SP'. Vazio = não exibe. */
     location: '',
     /** Exibido no lugar do endereço. Ajuste se preferir divulgar o endereço completo. */
-    locationNote: 'O endereço é enviado pelo WhatsApp junto com a confirmação do horário.',
+    locationNote: 'Piazza di Roma, zona oeste de Sorocaba/SP (endereço completo fornecido após reserva)',
     /** [CONFIRMAR] Itens visíveis nas fotos. Confira, complete com marcas/modelos ou remova. */
     equipment: [
-      'Bateria completa com pratos',
-      'Amplificadores de guitarra',
-      'Teclado',
-      'Mesa de som',
-      'Caixas de som',
-      'Microfone com pedestal',
-      'Cajón',
+      'Bateria completa (com opção de aluguel de pratos)',
+      'Amp de guitarra - Meteoro Nitrous 100g (100W) 2x10',
+      'Amp de guitarra - Meteoro Demolidor FWB-20 (20W) 1x10',
+      'Cubo de baixo - Voxstorm Cube Bass 125 (75W) 1x12',
+      'Mesa de som Behringer Xenyx 1202FX',
+      'PA Ativo Staner SR-315A 300w RMS + PA Ativo Mark Audio 1200 200w RMS',
+      'Ar Condionado',
     ],
     /** [CONFIRMAR] Diferenciais reais do estúdio. Vazio = não exibe. */
     highlights: [] as string[],
     /** [CONFIRMAR] Tipos de trabalho realizados. Vazio = não exibe. */
-    workTypes: ['Ensaios de bandas', 'Gravação de instrumentos e voz', 'Locação da sala para podcasts e ensaios fotográficos'],
+    workTypes: ['Ensaios de bandas', 'Gravação de instrumentos e voz', 'Produção musical, audiovisual e ensaios fotográficos', 'Locação da sala para aulas de música, podcasts, atividades em geral'],
   },
 
   privacy: {
