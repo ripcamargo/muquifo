@@ -1,6 +1,6 @@
 import { serviceInfo, studio } from '../config/studio';
 import type { HHMM, ISODate, ServiceType } from '../types';
-import { formatDateWithWeekday, formatTimeRange } from './datetime';
+import { formatDateWithWeekday, formatDuration, formatTimeRange, timeToMinutes } from './datetime';
 
 export function whatsappUrl(phoneDigits: string, text?: string): string {
   const base = `https://wa.me/${phoneDigits.replace(/\D/g, '')}`;
@@ -27,9 +27,9 @@ export interface BookingMessageData {
 /** Mensagem do pedido. Campos opcionais vazios não aparecem. */
 export function buildBookingMessage(d: BookingMessageData): string {
   const optional = [
-    d.projectName && `Projeto/banda: ${d.projectName}`,
+    d.projectName && `${d.service === 'locacao' ? 'Projeto' : 'Projeto/banda'}: ${d.projectName}`,
     d.peopleCount && `Pessoas: ${d.peopleCount}`,
-    d.description && `O que quero gravar: ${d.description}`,
+    d.description && `${serviceInfo(d.service).fields.descriptionShort ?? 'Descrição'}: ${d.description}`,
     d.notes && `Observações: ${d.notes}`,
   ].filter(Boolean);
 
@@ -43,7 +43,7 @@ export function buildBookingMessage(d: BookingMessageData): string {
     '*Detalhes do pedido*',
     `Serviço: ${serviceInfo(d.service).name}`,
     `Data: ${formatDateWithWeekday(d.date)}`,
-    `Horário: ${formatTimeRange(d.start, d.end)}`,
+    `Horário: ${formatTimeRange(d.start, d.end)} (${formatDuration(timeToMinutes(d.end) - timeToMinutes(d.start))})`,
     ...(optional.length ? ['', ...optional] : []),
     '',
     'Aguardo a confirmação da disponibilidade. Obrigado!',

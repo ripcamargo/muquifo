@@ -212,69 +212,142 @@
   }
 }
 
-// ── Horários ──────────────────────────────────────────────────────────────
-.mq-slots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  @media (min-width: 576px) {
-    grid-template-columns: repeat(3, 1fr);
+// ── Horário: linha do tempo, início e duração ────────────────────────────
+.mq-time-block {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  min-width: 0;
+  &__title {
+    color: var(--mq-cream-60);
+    margin-bottom: 0.65rem;
+    padding: 0;
+    font-size: 0.8125rem;
+  }
+  &:disabled {
+    opacity: 0.55;
   }
 }
-.mq-slot {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.15rem;
-  min-height: 64px;
-  padding: 0.6rem 0.85rem;
+
+.mq-timeline {
+  &__bar {
+    display: flex;
+    height: 28px;
+    border: 1px solid var(--mq-line-strong);
+    border-radius: var(--mq-radius);
+    overflow: hidden;
+  }
+  &__seg {
+    height: 100%;
+    flex-shrink: 0;
+    & + & {
+      border-left: 1px solid var(--mq-bg);
+    }
+  }
+  &__scale {
+    position: relative;
+    height: 1.4rem;
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--mq-cream-60);
+    font-variant-numeric: tabular-nums;
+    span {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      &:first-child {
+        transform: none;
+      }
+      &:last-child:not(:first-child) {
+        transform: translateX(-100%);
+      }
+    }
+  }
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+    font-size: 0.8125rem;
+    color: var(--mq-cream-60);
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    i {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--mq-line-strong);
+    }
+  }
+}
+// Estados com textura além da cor.
+.mq-timeline__seg,
+.mq-timeline__legend i {
+  &.is-livre {
+    background: var(--mq-cream);
+  }
+  &.is-ocupado {
+    background: repeating-linear-gradient(135deg, var(--mq-wine-bright) 0 4px, var(--mq-wine-deep) 4px 8px);
+  }
+  &.is-em_analise {
+    background: repeating-linear-gradient(90deg, rgba(232, 176, 79, 0.75) 0 2px, transparent 2px 6px);
+  }
+  &.is-indisponivel {
+    background: var(--mq-surface);
+  }
+}
+
+.mq-free-list {
+  margin: 0.6rem 0 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mq-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.45rem;
+}
+.mq-chip {
+  min-height: 48px;
+  padding: 0.4rem 0.5rem;
   background: var(--mq-bg-raised);
   border: 1px solid var(--mq-line-strong);
   border-radius: var(--mq-radius);
   color: var(--mq-cream);
-  text-align: left;
+  font-family: var(--mq-font-label);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s;
-  &__time {
-    font-family: var(--mq-font-label);
-    font-weight: 500;
-    font-size: 1.125rem;
-    letter-spacing: 0.02em;
-  }
-  &__state {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.75rem;
-    color: var(--mq-cream-60);
-  }
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
   &:hover:not(:disabled) {
     border-color: var(--mq-cream);
   }
-  &[aria-pressed='true'] {
+  &[aria-checked='true'] {
     background: var(--mq-cream);
     border-color: var(--mq-cream);
     color: var(--mq-wine);
-    .mq-slot__state {
-      color: var(--mq-wine);
-    }
   }
   &:disabled {
     cursor: not-allowed;
-    background: transparent;
-    border-color: var(--mq-line);
-    color: var(--mq-cream-40);
-    .mq-slot__time {
-      text-decoration: line-through;
-      text-decoration-thickness: 1px;
-    }
   }
-  &.is-hold:disabled {
-    border-style: dashed;
-    .mq-slot__time {
-      text-decoration: none;
-    }
+}
+
+.mq-time-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  margin: 0;
+  border: 1px solid var(--mq-cream-60);
+  border-left: 3px solid var(--mq-cream);
+  border-radius: var(--mq-radius);
+  svg {
+    flex-shrink: 0;
   }
 }
 

@@ -1,52 +1,69 @@
-import { ArrowRight, Ban, CalendarDays, Check, Clock, Hourglass } from 'lucide-react';
+import { ArrowRight, Ban, CalendarDays, Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { serviceInfo } from '../../config/studio';
 import type { useAvailability } from '../../hooks/useAvailability';
-import type { Slot } from '../../types';
-import { formatDateLong, formatDuration, formatTime } from '../../utils/datetime';
-import { generateSlots } from '../../utils/slots';
+import type { HHMM } from '../../types';
+import { formatDateLong, formatDuration, formatTime, formatTimeRange, minutesToTime, timeToMinutes } from '../../utils/datetime';
+import { dayTimeline, durationOptions, freePeriods, isBookable, startTimes } from '../../utils/slots';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
+import { DayTimeline } from './DayTimeline';
 import { AvailabilityGate, BackButton, StepTitle, type StepProps } from './shared';
 
 interface Props extends StepProps {
   availability: ReturnType<typeof useAvailability>;
   onContinue: () => void;
-  /** Avisa que o horário escolhido foi perdido na verificação final do envio. */
+  /** Avisa que o período escolhido foi perdido na verificação final do envio. */
   slotLost?: boolean;
 }
-
-const STATE_TEXT: Record<Slot['state'], string> = {
-  disponivel: 'Disponível',
-  em_analise: 'Em análise',
-  ocupado: 'Ocupado',
-};
 
 export function StepTime({ draft, update, goTo, availability, onContinue, slotLost }: Props) {
   const { settings, days, status } = availability;
   const service = draft.service!;
   const date = draft.date!;
+  const day = days.get(date);
   const [lostNotice, setLostNotice] = useState(!!slotLost);
 
-  const slots = useMemo(
-    () => (settings ? generateSlots(date, service, settings, days.get(date)) : []),
-    [settings, days, date, service],
-  );
+  const { periods, starts, timeline } = useMemo(() => {
+    if (!settings) return { periods: [], starts: [], timeline: [] };
+    return {
+      periods: freePeriods(date, service, settings, day),
+      starts: startTimes(date, service, settings, day),
+      timeline: dayTimeline(date, service, settings, day),
+    };
+  }, [settings, day, date, service]);
 
-  // Se o horário escolhido deixar de estar livre enquanto a pessoa decide, desmarca e avisa.
   const selected = draft.slot;
+  const durations = useMemo(
+    () => (settings && selected ? durationOptions(date, service, selected.start, settings, day) : []),
+    [settings, day, date, service, selected],
+  );
+  const currentDuration = selected ? timeToMinutes(selected.end) - timeToMinutes(selected.start) : 0;
+
+  // Se o período escolhido deixar de estar livre enquanto a pessoa decide, desmarca e avisa.
   useEffect(() => {
-    if (status !== 'ready' || !selected) return;
-    const current = slots.find((s) => s.start === selected.start && s.end === selected.end);
-    if (!current || current.state !== 'disponivel') {
+    if (status !== 'ready' || !settings || !selected) return;
+    if (!isBookable(date, service, selected, settings, day)) {
       update({ slot: null });
       setLostNotice(true);
     }
-  }, [slots, status, selected, update]);
+  }, [status, settings, day, date, service, selected, update]);
 
-  const duration = settings?.services[service].durationMin ?? 0;
-  const available = slots.filter((s) => s.state === 'disponivel');
+  const choose = (start: HHMM, duration: number) => {
+    setLostNotice(false);
+    update({ slot: { start, end: minutesToTime(timeToMinutes(start) + duration) } });
+  };
+
+  const pickStart = (start: HHMM) => {
+    if (!settings) return;
+    const options = durationOptions(date, service, start, settings, day);
+    // Mantém a duração escolhida se ainda couber; senão, a maior possível até ela.
+    const keep = options.filter((d) => d <= (currentDuration || options[0])).pop() ?? options[0];
+    choose(start, keep);
+  };
+
+  const rules = settings?.services[service];
 
   return (
     <div>
@@ -55,11 +72,9 @@ export function StepTime({ draft, update, goTo, availability, onContinue, slotLo
         <button type="button" className="mq-picked__chip" onClick={() => goTo('data')} aria-label="Trocar o dia">
           <CalendarDays size={16} aria-hidden="true" /> {formatDateLong(date)}
         </button>
-        {duration > 0 && (
-          <span className="mq-picked__chip" style={{ cursor: 'default' }}>
-            <Clock size={16} aria-hidden="true" /> {serviceInfo(service).name} · {formatDuration(duration)}
-          </span>
-        )}
+        <button type="button" className="mq-picked__chip" onClick={() => goTo('servico')} aria-label="Trocar o serviço">
+          {serviceInfo(service).name}
+        </button>
       </div>
 
       {lostNotice && (
@@ -69,46 +84,82 @@ export function StepTime({ draft, update, goTo, availability, onContinue, slotLo
       )}
 
       <AvailabilityGate status={status} error={availability.error} retry={availability.retry}>
-        {available.length === 0 ? (
+        {periods.length === 0 ? (
           <EmptyState
             icon={Ban}
-            title="Sem horários livres neste dia"
+            title="Sem período livre neste dia"
             actions={
               <Button size="sm" onClick={() => goTo('data')}>
                 Escolher outro dia
               </Button>
             }
           />
-        ) : null}
-        {slots.length > 0 && (
-          <div className="mq-slots" role="group" aria-label="Horários">
-            {slots.map((s) => {
-              const isSelected = selected?.start === s.start && selected?.end === s.end;
-              const free = s.state === 'disponivel';
-              return (
-                <button
-                  key={s.start}
-                  type="button"
-                  className={`mq-slot ${s.state === 'em_analise' ? 'is-hold' : ''}`}
-                  disabled={!free}
-                  aria-pressed={isSelected}
-                  aria-label={`${formatTime(s.start)} às ${formatTime(s.end)}: ${isSelected ? 'selecionado' : STATE_TEXT[s.state]}`}
-                  onClick={() => {
-                    setLostNotice(false);
-                    update({ slot: { start: s.start, end: s.end } });
-                  }}
-                >
-                  <span className="mq-slot__time">
-                    {formatTime(s.start)} – {formatTime(s.end)}
-                  </span>
-                  <span className="mq-slot__state">
-                    {isSelected ? <Check size={13} aria-hidden="true" /> : s.state === 'em_analise' ? <Hourglass size={13} aria-hidden="true" /> : null}
-                    {isSelected ? 'Selecionado' : STATE_TEXT[s.state]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        ) : (
+          <>
+            <section className="mq-time-block" aria-labelledby="livre-title">
+              <h4 id="livre-title" className="mq-time-block__title mq-label">
+                Livre neste dia
+              </h4>
+              <DayTimeline segments={timeline} />
+              <p className="mq-free-list">
+                {periods.map((p) => formatTimeRange(p.start, p.end)).join(' · ')}
+              </p>
+            </section>
+
+            <fieldset className="mq-time-block">
+              <legend className="mq-time-block__title mq-label">Começar às</legend>
+              <div className="mq-chips" role="radiogroup" aria-label="Horário de início">
+                {starts.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected?.start === t}
+                    className="mq-chip"
+                    onClick={() => pickStart(t)}
+                  >
+                    {formatTime(t)}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="mq-time-block" disabled={!selected}>
+              <legend className="mq-time-block__title mq-label">Por quanto tempo?</legend>
+              {selected ? (
+                <div className="mq-chips" role="radiogroup" aria-label="Duração">
+                  {durations.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      role="radio"
+                      aria-checked={d === currentDuration}
+                      className="mq-chip"
+                      onClick={() => choose(selected.start, d)}
+                    >
+                      {formatDuration(d)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mq-muted mb-0">Escolha primeiro o horário de início.</p>
+              )}
+              {rules && (
+                <p className="mq-field__hint mt-2 mb-0">
+                  Reservas de {formatDuration(rules.minDurationMin)} a {formatDuration(rules.maxDurationMin)}.
+                </p>
+              )}
+            </fieldset>
+
+            {selected && (
+              <p className="mq-time-summary" role="status">
+                <Clock size={18} aria-hidden="true" />
+                <span>
+                  Sua reserva: <strong>{formatTimeRange(selected.start, selected.end)}</strong> · {formatDuration(currentDuration)}
+                </span>
+              </p>
+            )}
+          </>
         )}
       </AvailabilityGate>
 

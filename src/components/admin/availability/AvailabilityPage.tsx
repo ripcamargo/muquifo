@@ -26,8 +26,9 @@ function validateSettings(s: AvailabilitySettings): string | null {
     if (err) return err;
   }
   for (const svc of Object.values(s.services)) {
-    if (svc.durationMin < 15) return 'A duração mínima de uma sessão é 15 minutos.';
-    if (svc.stepMin < 15) return 'O intervalo entre inícios precisa ser de pelo menos 15 minutos.';
+    if (svc.minDurationMin < 15) return 'A duração mínima precisa ser de pelo menos 15 minutos.';
+    if (svc.maxDurationMin < svc.minDurationMin) return 'A duração máxima não pode ser menor que a mínima.';
+    if (svc.stepMin < 15) return 'O passo dos horários precisa ser de pelo menos 15 minutos.';
   }
   if (s.maxDaysAhead < 1 || s.maxDaysAhead > 365) return 'A janela de agendamento deve ficar entre 1 e 365 dias.';
   return null;

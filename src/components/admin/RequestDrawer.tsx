@@ -34,7 +34,7 @@ export function requestSummary(r: BookingRequest): string {
     `Horário: ${formatTimeRange(r.startTime, r.endTime)}`,
     r.projectName && `Projeto/banda: ${r.projectName}`,
     r.peopleCount && `Pessoas: ${r.peopleCount}`,
-    r.description && `O que quer gravar: ${r.description}`,
+    r.description && `${serviceInfo(r.serviceType).fields.descriptionShort ?? 'Descrição'}: ${r.description}`,
     r.notes && `Observações: ${r.notes}`,
     `Status: ${STATUS_LABELS[r.status]}`,
   ]
@@ -173,7 +173,7 @@ function RequestDetail({ request: r, onClose }: { request: BookingRequest; onClo
             )}
             {r.description && (
               <>
-                <dt>O que gravar</dt>
+                <dt>{info.fields.descriptionShort ?? 'Descrição'}</dt>
                 <dd>{r.description}</dd>
               </>
             )}

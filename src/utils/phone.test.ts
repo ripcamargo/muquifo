@@ -60,7 +60,7 @@ describe('mensagem do WhatsApp', () => {
     const msg = buildBookingMessage(base);
     expect(msg).toContain('Serviço: Ensaio musical');
     expect(msg).toContain('Data: 24/10/2026 (sábado)');
-    expect(msg).toContain('Horário: 19h às 21h');
+    expect(msg).toContain('Horário: 19h às 21h (2h)');
     expect(msg).not.toContain('Projeto/banda');
     expect(msg).not.toContain('Observações');
   });

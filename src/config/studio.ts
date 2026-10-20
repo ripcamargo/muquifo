@@ -4,7 +4,7 @@
 // Campos vazios ('' ou []) simplesmente não aparecem no site.
 // ─────────────────────────────────────────────────────────────────────────────
 import type { LucideIcon } from 'lucide-react';
-import { Drum, Mic } from 'lucide-react';
+import { DoorOpen, Drum, Mic } from 'lucide-react';
 import type { ServiceType } from '../types';
 
 export const studio = {
@@ -16,10 +16,10 @@ export const studio = {
   whatsappDisplay: '+55 15 99811-0938',
 
   hero: {
-    eyebrow: 'Home studio · Ensaios e gravações',
+    eyebrow: 'Home studio · Ensaios, gravações e locação',
     titleLines: ['Liga o amp.', 'A sala é sua.'],
     subtitle:
-      'Reserve um horário para ensaiar com a banda ou gravar seu projeto. Escolha o dia, veja os horários livres e envie o pedido pelo WhatsApp.',
+      'Reserve a sala para ensaiar, gravar ou tocar o seu projeto — de 1 hora a uma tarde inteira. Escolha o dia, veja os períodos livres e envie o pedido pelo WhatsApp.',
   },
 
   about: {
@@ -46,7 +46,7 @@ export const studio = {
     /** [CONFIRMAR] Diferenciais reais do estúdio. Vazio = não exibe. */
     highlights: [] as string[],
     /** [CONFIRMAR] Tipos de trabalho realizados. Vazio = não exibe. */
-    workTypes: ['Ensaios de bandas', 'Gravação de instrumentos e voz'],
+    workTypes: ['Ensaios de bandas', 'Gravação de instrumentos e voz', 'Locação da sala para podcasts e ensaios fotográficos'],
   },
 
   privacy: {
@@ -67,7 +67,15 @@ export interface ServiceInfo {
   summary: string;
   audience: string;
   /** Campos extras pedidos na etapa de detalhes. */
-  fields: { projectLabel: string; askPeople: boolean; askDescription: boolean; descriptionLabel?: string };
+  fields: {
+    projectLabel: string;
+    askPeople: boolean;
+    askDescription: boolean;
+    descriptionLabel?: string;
+    descriptionHint?: string;
+    /** Rótulo curto da descrição na mensagem do WhatsApp e no painel. */
+    descriptionShort?: string;
+  };
 }
 
 /** Para adicionar um serviço: inclua aqui, em ServiceType (src/types) e nas regras do Firestore. */
@@ -93,6 +101,24 @@ export const services: ServiceInfo[] = [
       askPeople: false,
       askDescription: true,
       descriptionLabel: 'O que você quer gravar?',
+      descriptionHint: 'Ex.: voz e violão de 2 músicas, guia de bateria…',
+      descriptionShort: 'O que quero gravar',
+    },
+  },
+  {
+    id: 'locacao',
+    name: 'Locação de sala',
+    verb: 'locação',
+    icon: DoorOpen,
+    summary: 'A sala por algumas horas para o que você precisar: podcast, ensaio fotográfico, vídeo, aula ou reunião criativa.',
+    audience: 'Para criadores, fotógrafos e projetos que precisam de um espaço com cara de estúdio.',
+    fields: {
+      projectLabel: 'Nome do projeto ou empresa',
+      askPeople: true,
+      askDescription: true,
+      descriptionLabel: 'Para que você vai usar a sala?',
+      descriptionHint: 'Ex.: gravar um episódio de podcast, ensaio fotográfico da banda…',
+      descriptionShort: 'Finalidade',
     },
   },
 ];

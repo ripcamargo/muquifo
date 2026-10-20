@@ -646,6 +646,12 @@
   }
 }
 
+.adm-form-grid--4 {
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .adm-preview {
   display: flex;
   flex-wrap: wrap;

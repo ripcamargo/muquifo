@@ -56,7 +56,7 @@ export function StepDetails({ draft, update, goTo, onContinue }: Props) {
       )}
 
       {info.fields.askDescription && (
-        <Field label={info.fields.descriptionLabel ?? 'Descrição'} note="opcional" hint="Ex.: voz e violão de 2 músicas, guia de bateria…">
+        <Field label={info.fields.descriptionLabel ?? 'Descrição'} note="opcional" hint={info.fields.descriptionHint}>
           <textarea
             className="mq-input"
             maxLength={1000}

@@ -7,17 +7,18 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import type {
-  AvailabilitySettings,
-  BlockReason,
-  CalendarDay,
-  DayBlock,
-  DayMode,
-  ISODate,
-  Occupation,
-  ServiceSchedule,
-  ServiceType,
-  TimeInterval,
+import {
+  SERVICE_TYPES,
+  type AvailabilitySettings,
+  type BlockReason,
+  type CalendarDay,
+  type DayBlock,
+  type DayMode,
+  type ISODate,
+  type Occupation,
+  type ServiceSchedule,
+  type ServiceType,
+  type TimeInterval,
 } from '../types';
 import { isHHMM, STUDIO_TIMEZONE } from '../utils/datetime';
 import { emptyDay } from '../utils/slots';
@@ -33,15 +34,16 @@ const intervals = (value: unknown): TimeInterval[] =>
         .filter((i) => isHHMM(i.start) && isHHMM(i.end))
     : [];
 
-const SERVICE_TYPES: ServiceType[] = ['ensaio', 'gravacao'];
 const BLOCK_REASONS: BlockReason[] = ['pessoal', 'manutencao', 'compromisso', 'outro'];
 
 function service(value: unknown): ServiceSchedule {
   const v = (value ?? {}) as Record<string, unknown>;
   return {
     enabled: v.enabled !== false,
-    durationMin: Math.max(15, num(v.durationMin, 120)),
-    stepMin: Math.max(15, num(v.stepMin, num(v.durationMin, 120))),
+    // Formato antigo (sessão de duração fixa) vira mínimo = máximo = duração.
+    minDurationMin: Math.max(15, num(v.minDurationMin, num(v.durationMin, 60))),
+    maxDurationMin: Math.max(15, num(v.maxDurationMin, num(v.durationMin, 240))),
+    stepMin: Math.max(15, num(v.stepMin, 60)),
     bufferMin: Math.max(0, num(v.bufferMin, 0)),
   };
 }
@@ -54,7 +56,7 @@ export function parseSettings(data: Record<string, unknown>): AvailabilitySettin
   return {
     timezone: str(data.timezone, STUDIO_TIMEZONE) || STUDIO_TIMEZONE,
     weekly,
-    services: { ensaio: service(servicesRaw.ensaio), gravacao: service(servicesRaw.gravacao) },
+    services: Object.fromEntries(SERVICE_TYPES.map((t) => [t, service(servicesRaw[t])])) as Record<ServiceType, ServiceSchedule>,
     minAdvanceHours: Math.max(0, num(data.minAdvanceHours, 0)),
     maxDaysAhead: Math.min(365, Math.max(1, num(data.maxDaysAhead, 60))),
   };

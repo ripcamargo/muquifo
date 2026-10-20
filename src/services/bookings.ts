@@ -9,7 +9,7 @@ import {
   writeBatch,
   type DocumentSnapshot,
 } from 'firebase/firestore';
-import type { BookingRequest, HHMM, ISODate, Occupation, RequestStatus, ServiceType } from '../types';
+import { SERVICE_TYPES, type BookingRequest, type HHMM, type ISODate, type Occupation, type RequestStatus, type ServiceType } from '../types';
 import { findConflicts } from '../utils/slots';
 import { dayRef, parseDay, parseSettings } from './availability';
 import { ensureVisitorUser } from './firebase/auth';
@@ -81,7 +81,7 @@ function parseRequest(snap: DocumentSnapshot): BookingRequest {
     name: str(d.name),
     whatsapp: str(d.whatsapp),
     whatsappNormalized: str(d.whatsappNormalized),
-    serviceType: d.serviceType === 'gravacao' ? 'gravacao' : 'ensaio',
+    serviceType: SERVICE_TYPES.includes(d.serviceType) ? d.serviceType : 'ensaio',
     projectName: str(d.projectName),
     peopleCount: typeof d.peopleCount === 'number' ? num(d.peopleCount, 0) : null,
     description: str(d.description),

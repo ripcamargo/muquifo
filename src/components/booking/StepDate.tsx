@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { serviceInfo } from '../../config/studio';
 import type { useAvailability } from '../../hooks/useAvailability';
 import type { ISODate } from '../../types';
-import { addDays, addMonths, formatDateLong, formatMonth, monthOf, monthRange, zonedNow } from '../../utils/datetime';
+import { addDays, addMonths, formatDateLong, formatDuration, formatMonth, monthOf, monthRange, zonedNow } from '../../utils/datetime';
 import { bookableRange, dayAvailability } from '../../utils/slots';
 import { MonthCalendar, type DayView } from '../calendar/MonthCalendar';
 import { Button } from '../ui/Button';
@@ -35,7 +35,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
           return {
             enabled: true,
             className: 'is-available',
-            label: `${label}: ${a.available} ${a.available === 1 ? 'horário livre' : 'horários livres'}`,
+            label: `${label}: ${formatDuration(a.available)} livres`,
           };
         case 'lotado':
           return { enabled: false, className: 'is-full', label: `${label}: lotado` };
@@ -63,7 +63,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
     <div>
       <StepTitle>Escolha o dia</StepTitle>
       <p className="mq-wizard__lead">
-        Dias com marcação têm horário livre para <strong>{serviceInfo(service).name.toLowerCase()}</strong>.
+        Dias com marcação têm período livre para <strong>{serviceInfo(service).name.toLowerCase()}</strong>. Você escolhe a duração no próximo passo.
       </p>
 
       <AvailabilityGate status={status} error={availability.error} retry={availability.retry}>

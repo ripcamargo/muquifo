@@ -5,8 +5,8 @@ import { fetchAvailabilityFresh } from '../../services/availability';
 import { submitBookingRequest } from '../../services/bookings';
 import { friendlyError } from '../../services/firebase/errors';
 import type { BookingStep } from '../../types';
-import { formatDateLong, formatTimeRange } from '../../utils/datetime';
-import { generateSlots } from '../../utils/slots';
+import { formatDateLong, formatDuration, formatTimeRange, timeToMinutes } from '../../utils/datetime';
+import { isBookable } from '../../utils/slots';
 import { cleanMultiline, collapseSpaces } from '../../utils/text';
 import { buildBookingMessage, studioWhatsappUrl } from '../../utils/whatsapp';
 import { Alert } from '../ui/Alert';
@@ -35,7 +35,11 @@ export function StepReview({ draft, update, goTo, onSlotLost }: Props) {
     { label: 'WhatsApp', value: draft.whatsapp, step: 'contato' },
     { label: 'Serviço', value: info.name, step: 'servico' },
     { label: 'Data', value: formatDateLong(date), step: 'data' },
-    { label: 'Horário', value: formatTimeRange(slot.start, slot.end), step: 'horario' },
+    {
+      label: 'Horário',
+      value: `${formatTimeRange(slot.start, slot.end)} (${formatDuration(timeToMinutes(slot.end) - timeToMinutes(slot.start))})`,
+      step: 'horario',
+    },
   ];
   if (projectName) rows.push({ label: info.fields.projectLabel, value: projectName, step: 'detalhes' });
   if (peopleCount) rows.push({ label: 'Pessoas', value: String(peopleCount), step: 'detalhes' });
@@ -57,12 +61,9 @@ export function StepReview({ draft, update, goTo, onSlotLost }: Props) {
     }
 
     try {
-      // 1. Confere de novo, direto no servidor, se o horário segue livre.
+      // 1. Confere de novo, direto no servidor, se o período segue livre (para qualquer serviço: a sala é única).
       const fresh = await fetchAvailabilityFresh(date);
-      const current = fresh.settings
-        ? generateSlots(date, service, fresh.settings, fresh.day).find((s) => s.start === slot.start && s.end === slot.end)
-        : undefined;
-      if (!current || current.state !== 'disponivel') {
+      if (!fresh.settings || !isBookable(date, service, slot, fresh.settings, fresh.day)) {
         win?.close();
         update({ slot: null });
         onSlotLost();

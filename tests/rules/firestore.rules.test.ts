@@ -171,6 +171,11 @@ describe('pedidos', () => {
     await assertSucceeds(submitRequestAs(visitor(), 'visitor-1'));
   });
 
+  it('aceita locação de sala e recusa serviço inexistente', async () => {
+    await assertFails(submitRequestAs(visitor(), 'visitor-1', { serviceType: 'festa' }));
+    await assertSucceeds(submitRequestAs(visitor(), 'visitor-1', { serviceType: 'locacao', startTime: '14:00', endTime: '19:00' }));
+  });
+
   it('visitante não cria pedido confirmado nem com campos extras', async () => {
     await assertFails(submitRequestAs(visitor(), 'visitor-1', { status: 'confirmado' }));
     await assertFails(submitRequestAs(visitor(), 'visitor-1', { adminNotes: 'oi' }));

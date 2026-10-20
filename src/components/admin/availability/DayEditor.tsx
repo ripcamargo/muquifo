@@ -5,7 +5,7 @@ import { saveDayOverrides, type DayOverrides } from '../../../services/availabil
 import { friendlyError } from '../../../services/firebase/errors';
 import type { AvailabilitySettings, BlockReason, CalendarDay, DayMode, ISODate, TimeInterval } from '../../../types';
 import { formatDateLong, formatTime, formatTimeRange, isHHMM, timeToMinutes, weekdayOf, zonedNow } from '../../../utils/datetime';
-import { emptyDay, generateSlots, validateIntervals } from '../../../utils/slots';
+import { dayTimeline, emptyDay, validateIntervals } from '../../../utils/slots';
 import { Alert } from '../../ui/Alert';
 import { Button } from '../../ui/Button';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
@@ -27,6 +27,8 @@ const MODES: { id: DayMode; label: string }[] = [
 ];
 
 const PREVIEW_NOW = new Date('2000-01-01T00:00:00Z');
+
+const SEGMENT_TEXT = { livre: 'livre', ocupado: 'ocupado', em_analise: 'em análise', indisponivel: 'indisponível' } as const;
 
 const overridesOf = (day: CalendarDay): DayOverrides => ({
   mode: day.mode,
@@ -254,19 +256,21 @@ export function DayEditor({ date, settings, day }: Props) {
       <div className="mb-4">
         <div className="mq-label mq-muted mb-2">Prévia do que o site vai oferecer</div>
         {services.map((s) => {
-          const slots = generateSlots(date, s.id, settings, previewDay, PREVIEW_NOW);
+          if (!settings.services[s.id].enabled) return null;
+          const segments = dayTimeline(date, s.id, settings, previewDay, PREVIEW_NOW);
           return (
             <div key={s.id} className="mb-2">
               <div style={{ fontSize: '0.875rem', marginBottom: 4 }}>{s.name}</div>
               <div className="adm-preview">
-                {slots.length ? (
-                  slots.map((p) => (
-                    <span key={p.start} className={p.state !== 'disponivel' ? 'is-taken' : ''}>
+                {segments.length ? (
+                  segments.map((p) => (
+                    <span key={p.start} className={p.state !== 'livre' ? 'is-taken' : ''}>
                       {formatTime(p.start)}–{formatTime(p.end)}
+                      {p.state !== 'livre' && ' · ' + SEGMENT_TEXT[p.state]}
                     </span>
                   ))
                 ) : (
-                  <span className="is-taken">Nenhum horário</span>
+                  <span className="is-taken">Fechado</span>
                 )}
               </div>
             </div>

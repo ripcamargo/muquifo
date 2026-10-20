@@ -9,7 +9,7 @@ import {
   type DocumentSnapshot,
 } from 'firebase/firestore';
 import { studio } from '../config/studio';
-import type { BookingStep, Lead, LeadStatus, ServiceType } from '../types';
+import { SERVICE_TYPES, type BookingStep, type Lead, type LeadStatus, type ServiceType } from '../types';
 import { ensureVisitorUser } from './firebase/auth';
 import { col, COLLECTIONS, db, ref, str, toDate } from './firebase/db';
 import { isPermissionDenied, withTimeout } from './firebase/errors';
@@ -86,7 +86,7 @@ function parseLead(snap: DocumentSnapshot): Lead {
     status: LEAD_STATUSES.includes(d.status) ? d.status : 'novo',
     currentStep: str(d.currentStep, 'contato') as BookingStep,
     sessionId: str(d.sessionId, snap.id),
-    serviceType: d.serviceType === 'ensaio' || d.serviceType === 'gravacao' ? d.serviceType : null,
+    serviceType: SERVICE_TYPES.includes(d.serviceType) ? d.serviceType : null,
     bookingRequestId: typeof d.bookingRequestId === 'string' ? d.bookingRequestId : null,
     privacyNoticeVersion: str(d.privacyNoticeVersion),
     adminNotes: str(d.adminNotes),

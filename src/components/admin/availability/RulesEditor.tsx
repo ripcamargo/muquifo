@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { services } from '../../../config/studio';
 import type { AvailabilitySettings, ServiceSchedule, ServiceType } from '../../../types';
-import { formatDuration, formatTime, weekdayName } from '../../../utils/datetime';
-import { generateSlots } from '../../../utils/slots';
+import { formatDuration, formatTime, formatTimeRange, weekdayName } from '../../../utils/datetime';
+import { freePeriods, startTimes } from '../../../utils/slots';
 import { Field } from '../../ui/Field';
 
 interface Props {
@@ -37,10 +37,16 @@ export function RulesEditor({ settings, onChange }: Props) {
 
   return (
     <>
+      <p className="mq-muted" style={{ fontSize: '0.9375rem' }}>
+        A sala é uma só: qualquer reserva confirmada, pedido em análise ou bloqueio ocupa o período para todos os
+        serviços. O cliente escolhe o início e quantas horas quer, dentro dos limites abaixo.
+      </p>
+
       {services.map((s) => {
         const cfg = settings.services[s.id];
-        const overlapping = cfg.stepMin < cfg.durationMin;
-        const preview = generateSlots(PREVIEW_DATES[previewDay], s.id, settings, null, PREVIEW_NOW);
+        const date = PREVIEW_DATES[previewDay];
+        const periods = freePeriods(date, s.id, settings, null, PREVIEW_NOW);
+        const starts = startTimes(date, s.id, settings, null, PREVIEW_NOW);
         return (
           <section className="adm-card" key={s.id}>
             <div className="adm-card__head">
@@ -50,36 +56,30 @@ export function RulesEditor({ settings, onChange }: Props) {
                 {cfg.enabled ? 'Aceitando pedidos' : 'Pausado'}
               </label>
             </div>
-            <div className="adm-form-grid">
-              <Field label="Duração da sessão" note="min" hint={formatDuration(cfg.durationMin)}>
-                <NumberInput value={cfg.durationMin} min={15} max={720} step={15} onChange={(n) => setService(s.id, { durationMin: n })} />
+            <div className="adm-form-grid adm-form-grid--4">
+              <Field label="Duração mínima" note="min" hint={formatDuration(cfg.minDurationMin)}>
+                <NumberInput value={cfg.minDurationMin} min={15} max={720} step={15} onChange={(n) => setService(s.id, { minDurationMin: n })} />
               </Field>
-              <Field label="Novo início a cada" note="min" hint="Ex.: 60 oferece 18h, 19h, 20h…">
-                <NumberInput value={cfg.stepMin} min={15} max={720} step={15} onChange={(n) => setService(s.id, { stepMin: n })} />
+              <Field label="Duração máxima" note="min" hint={formatDuration(cfg.maxDurationMin)}>
+                <NumberInput value={cfg.maxDurationMin} min={15} max={1440} step={15} onChange={(n) => setService(s.id, { maxDurationMin: n })} />
               </Field>
-              <Field label="Preparação entre reservas" note="min" hint="Folga antes/depois de outra reserva">
+              <Field label="De quanto em quanto" note="min" hint="60 → 18h, 19h… e 1h, 2h, 3h…">
+                <NumberInput value={cfg.stepMin} min={15} max={240} step={15} onChange={(n) => setService(s.id, { stepMin: n })} />
+              </Field>
+              <Field label="Preparação entre reservas" note="min" hint="Folga antes e depois de outra reserva">
                 <NumberInput value={cfg.bufferMin} min={0} max={240} step={5} onChange={(n) => setService(s.id, { bufferMin: n })} />
               </Field>
             </div>
-            {overlapping && (
-              <p className="mq-muted" style={{ fontSize: '0.875rem' }}>
-                Os horários oferecidos se sobrepõem: quando um for confirmado, os que batem com ele somem da agenda.
+            <div className="mq-label mq-muted mb-2">Prévia · {weekdayName(previewDay)} sem reservas</div>
+            {cfg.enabled && periods.length ? (
+              <p className="mb-0" style={{ fontSize: '0.9375rem' }}>
+                Livre {periods.map((p) => formatTimeRange(p.start, p.end)).join(' · ')}. Inícios:{' '}
+                {starts.map(formatTime).join(', ')}. Duração de {formatDuration(cfg.minDurationMin)} até{' '}
+                {formatDuration(cfg.maxDurationMin)} (limitada ao fim do expediente).
               </p>
+            ) : (
+              <p className="mq-muted mb-0">{cfg.enabled ? 'Nenhum horário nesse dia.' : 'Serviço pausado: não aparece no site.'}</p>
             )}
-            <div className="mq-label mq-muted mb-2">
-              Prévia · {weekdayName(previewDay)}
-            </div>
-            <div className="adm-preview">
-              {preview.length ? (
-                preview.map((p) => (
-                  <span key={p.start}>
-                    {formatTime(p.start)}–{formatTime(p.end)}
-                  </span>
-                ))
-              ) : (
-                <span className="is-taken">Nenhum horário nesse dia</span>
-              )}
-            </div>
           </section>
         );
       })}
@@ -106,7 +106,7 @@ export function RulesEditor({ settings, onChange }: Props) {
           </Field>
         </div>
         <p className="mq-muted mb-0" style={{ fontSize: '0.875rem' }}>
-          Fuso horário: {settings.timezone}. Horários nunca ultrapassam o fim do expediente configurado.
+          Fuso horário: {settings.timezone}. Nenhuma reserva ultrapassa o fim do expediente configurado.
         </p>
       </section>
     </>
