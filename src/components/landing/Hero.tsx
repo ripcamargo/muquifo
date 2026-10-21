@@ -6,8 +6,6 @@ import { requestBooking } from '../../utils/bookingIntent';
 import { Button, ButtonLink } from '../ui/Button';
 import { Picture } from '../ui/Picture';
 
-const HOW_IT_WORKS = ['Deixe seu contato e escolha o serviço', 'Veja os dias e horários livres', 'Envie o pedido pelo WhatsApp'];
-
 export function Hero() {
   const logoRef = useHeroLogoDock<HTMLImageElement>();
 
@@ -19,10 +17,7 @@ export function Hero() {
 
       <div className="container">
         <div className="mq-hero__content">
-          <p className="mq-hero__eyebrow mq-label">
-            
-            {studio.hero.eyebrow}
-          </p>
+          <p className="mq-hero__eyebrow mq-label">{studio.hero.eyebrow}</p>
 
           <h1 id="hero-title" className="mq-hero__title">
             <img ref={logoRef} className="mq-hero__logo" src="/img/logo-lockup.webp" width={963} height={400} alt={studio.name} />
@@ -40,8 +35,6 @@ export function Hero() {
           </div>
         </div>
       </div>
-
-      
     </section>
   );
 }
