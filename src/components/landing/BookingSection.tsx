@@ -11,7 +11,7 @@ import { SectionHead } from './SectionHead';
 const STEPS = [
   { title: 'Seu contato', text: 'Nome e WhatsApp, nada mais.' },
   { title: 'Dia e horário', text: 'Veja os períodos livres e escolha quantas horas quer.' },
-  { title: 'Envio pelo WhatsApp', text: 'O pedido chega pronto e o estúdio confirma.' },
+  { title: 'Aguarde a confirmação', text: 'Confirmaremos seu agendamento em breve.' },
 ];
 
 /** Chamada para o agendamento. O fluxo em si abre numa janela por cima da página (BookingModal). */
@@ -45,7 +45,7 @@ export function BookingSection() {
         <div className="mq-booking-section__layout">
           <div className="mq-booking-section__aside">
             <SectionHead index="03" eyebrow="Agendamento" title="Reserve seu horário" id="reservar-title">
-              Em poucos passos você escolhe o dia, vê os períodos livres e manda o pedido para o estúdio.
+              Consulte as datas e horários livres e em poucos cliques marque sua reserva com a gente.
             </SectionHead>
             <ul className="mq-booking-section__notes">
               <li>

@@ -61,7 +61,7 @@ export function StepDate({ draft, goTo, availability, month, setMonth, onPick }:
     <div>
       <StepTitle>Escolha o dia</StepTitle>
       <p className="mq-wizard__lead">
-        Dias com marcação têm horário livre. Você escolhe o início e a duração no próximo passo.
+        Selecione a data que deseja agendar:
       </p>
 
       <AvailabilityGate status={status} error={availability.error} retry={availability.retry}>

@@ -76,14 +76,16 @@
 
   &.is-available {
     color: var(--mq-cream);
-    background: var(--mq-bg-raised);
-    border-color: var(--mq-line-strong);
+    background: rgba(143, 207, 156, 0.14); // --mq-ok
+    border-color: rgba(143, 207, 156, 0.55);
     cursor: pointer;
     .mq-day__mark {
       opacity: 1;
+      background: var(--mq-ok);
     }
     &:hover {
-      border-color: var(--mq-cream);
+      background: rgba(143, 207, 156, 0.24);
+      border-color: var(--mq-ok);
     }
   }
   &.is-full {
@@ -130,8 +132,8 @@
   i {
     width: 18px;
     height: 18px;
-    border: 1px solid var(--mq-line-strong);
-    background: var(--mq-bg-raised);
+    border: 1px solid rgba(143, 207, 156, 0.55);
+    background: rgba(143, 207, 156, 0.14);
     display: inline-grid;
     place-items: end center;
     padding-bottom: 3px;
@@ -141,9 +143,10 @@
       content: '';
       width: 8px;
       height: 2px;
-      background: var(--mq-cream);
+      background: var(--mq-ok);
     }
     &.is-full {
+      border-color: var(--mq-line-strong);
       border-style: dashed;
       background: transparent;
       &::after {

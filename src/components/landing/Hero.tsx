@@ -41,14 +41,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="mq-hero__steps mq-label" aria-label="Como funciona">
-        {HOW_IT_WORKS.map((text, i) => (
-          <div key={text}>
-            <b>0{i + 1}</b>
-            <span>{text}</span>
-          </div>
-        ))}
-      </div>
+      
     </section>
   );
 }

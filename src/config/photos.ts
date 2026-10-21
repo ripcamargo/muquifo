@@ -21,13 +21,13 @@ export const photos = {
     width: 1195,
     height: 896,
     alt: 'Sala do Muquifo com bateria vermelha, pratos, amplificador e caixas de som nas paredes de feltro vinho',
-    caption: 'A sala de ensaio',
+    caption: '',
   },
   guitarra: {
     ...responsive('studio-guitarra'),
     width: 1195,
     height: 896,
     alt: 'Canto do estúdio com guitarra pendurada na parede, teclado, microfone no pedestal, amplificador, cajón e mesa de som',
-    caption: 'Guitarra, teclado e mesa',
+    caption: '',
   },
 } satisfies Record<string, Photo>;

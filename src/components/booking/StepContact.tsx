@@ -58,8 +58,8 @@ export function StepContact({ draft, update }: StepProps) {
 
   return (
     <form onSubmit={submit} noValidate>
-      <StepTitle>Vamos marcar seu som?</StepTitle>
-      <p className="mq-wizard__lead">Primeiro, deixe seu contato. Depois você escolhe o melhor horário.</p>
+      <StepTitle>Bora marcar?</StepTitle>
+      <p className="mq-wizard__lead">Deixe seu contato antes de escolher seu horário.</p>
 
       <Field label="Nome" error={errors.name}>
         <input
@@ -117,10 +117,7 @@ export function StepContact({ draft, update }: StepProps) {
         </Button>
       </div>
 
-      <p className="mq-wizard__privacy">
-        Seus dados ficam registrados para o estúdio retornar sobre este pedido e não são usados para propaganda.{' '}
-        <a href="/privacidade" target="_blank" rel="noopener">Política de privacidade</a>.
-      </p>
+       
     </form>
   );
 }
