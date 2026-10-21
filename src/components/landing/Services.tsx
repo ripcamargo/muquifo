@@ -1,7 +1,5 @@
-import { ArrowRight, CalendarDays } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { services } from '../../config/studio';
-import { requestBooking } from '../../utils/bookingIntent';
-import { Button } from '../ui/Button';
 import { SectionHead } from './SectionHead';
 
 export function Services() {
@@ -26,20 +24,23 @@ export function Services() {
               <h3 id={`servico-${s.id}`} className="mq-display mq-service-card__title">
                 {s.name}
               </h3>
-              <p className="mq-service-card__summary">{s.summary}</p>
-              <p className="mq-service-card__audience">{s.audience}</p>
-              <p className="mq-service-card__meta">
-                <CalendarDays size={18} aria-hidden="true" />
-                Pedido de reserva por dia e horário
-              </p>
-              <Button
-                variant="primary"
-                block
-                onClick={() => requestBooking(s.id)}
-                iconRight={<ArrowRight size={18} aria-hidden="true" />}
-              >
-                Agendar {s.verb}
-              </Button>
+              <div>
+                <p className="mq-service-card__summary">{s.summary}</p>
+                <p className="mq-service-card__audience">{s.audience}</p>
+              </div>
+              {s.equipment.length > 0 && (
+                <details className="mq-service-card__equipment">
+                  <summary className="mq-label">
+                    Equipamento <span>({s.equipment.length})</span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </summary>
+                  <ul>
+                    {s.equipment.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </article>
           ))}
         </div>

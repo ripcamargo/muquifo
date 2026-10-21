@@ -19,6 +19,17 @@
     }
   }
 
+  // Enquanto o logo da hero sobe até aqui, o cabeçalho fica transparente
+  // e sem o próprio logo, para os dois não aparecerem ao mesmo tempo.
+  html[data-hero-logo='flying'] &:not(.is-open) {
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
+    .mq-header__brand img {
+      opacity: 0;
+    }
+  }
+
   &__inner {
     height: var(--mq-header-h);
     display: flex;

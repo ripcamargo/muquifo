@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { photos } from '../../config/photos';
 import { studio } from '../../config/studio';
+import { useHeroLogoDock } from '../../hooks/useHeroLogoDock';
 import { requestBooking } from '../../utils/bookingIntent';
 import { Button, ButtonLink } from '../ui/Button';
 import { Picture } from '../ui/Picture';
@@ -8,6 +9,8 @@ import { Picture } from '../ui/Picture';
 const HOW_IT_WORKS = ['Deixe seu contato e escolha o serviço', 'Veja os dias e horários livres', 'Envie o pedido pelo WhatsApp'];
 
 export function Hero() {
+  const logoRef = useHeroLogoDock<HTMLImageElement>();
+
   return (
     <section className="mq-hero" aria-labelledby="hero-title">
       <div className="mq-hero__media">
@@ -17,17 +20,13 @@ export function Hero() {
       <div className="container">
         <div className="mq-hero__content">
           <p className="mq-hero__eyebrow mq-label">
-            <span className="mq-rec" aria-hidden="true" />
+            
             {studio.hero.eyebrow}
           </p>
 
-          <hr className="mq-rule" aria-hidden="true" />
-          <h1 id="hero-title" className="mq-display mq-hero__title">
-            {studio.hero.titleLines.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
+          <h1 id="hero-title" className="mq-hero__title">
+            <img ref={logoRef} className="mq-hero__logo" src="/img/logo-lockup.webp" width={963} height={400} alt={studio.name} />
           </h1>
-          <hr className="mq-rule mq-rule--gap" aria-hidden="true" />
 
           <p className="mq-hero__subtitle">{studio.hero.subtitle}</p>
 

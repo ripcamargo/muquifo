@@ -14,16 +14,11 @@ const LOGO_INK = [236, 231, 211]; // #ECE7D3
 await mkdir(OUT, { recursive: true });
 
 /** Fotos: várias larguras em WebP + um JPEG de fallback. */
-async function photo(name, widths = [640, 960, 1280]) {
+async function photo(name, widths = [640, 960, 1195]) {
   for (const w of widths) {
     await sharp(`${SRC}/${name}.jpg`).resize({ width: w }).webp({ quality: 78 }).toFile(`${OUT}/${name}-${w}.webp`);
   }
-  await sharp(`${SRC}/${name}.jpg`).resize({ width: 1280 }).jpeg({ quality: 80, mozjpeg: true }).toFile(`${OUT}/${name}.jpg`);
-}
-
-/** Recortes de detalhe das fotos reais, usados na galeria. */
-async function detail(name, src, region, width = 640) {
-  await sharp(`${SRC}/${src}.jpg`).extract(region).resize({ width }).webp({ quality: 80 }).toFile(`${OUT}/${name}.webp`);
+  await sharp(`${SRC}/${name}.jpg`).resize({ width: 1195 }).jpeg({ quality: 80, mozjpeg: true }).toFile(`${OUT}/${name}.jpg`);
 }
 
 /**
@@ -52,9 +47,6 @@ async function transparentLogo(region, file, height) {
 
 await photo('studio-bateria');
 await photo('studio-guitarra');
-
-await detail('detalhe-guitarra', 'studio-guitarra', { left: 420, top: 0, width: 300, height: 400 }, 300);
-await detail('detalhe-mesa', 'studio-guitarra', { left: 0, top: 560, width: 480, height: 330 }, 480);
 
 // Marca com as barras (sem "HOME STUDIO"), para o cabeçalho.
 await transparentLogo({ left: 105, top: 343, width: 814, height: 246 }, 'logo-wordmark', 160);

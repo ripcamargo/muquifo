@@ -4,8 +4,8 @@ import { photos, type Photo } from '../../config/photos';
 import { useModal } from '../../hooks/useModal';
 import { Picture } from '../ui/Picture';
 
-const ITEMS: Photo[] = [photos.bateria, photos.detalheGuitarra, photos.detalheMesa, photos.guitarra];
-const SIZES = ['(min-width: 992px) 50vw, 100vw', '(min-width: 992px) 25vw, 50vw', '(min-width: 992px) 25vw, 50vw', '(min-width: 992px) 25vw, 100vw'];
+const ITEMS: Photo[] = [photos.bateria, photos.guitarra];
+const SIZES = '(min-width: 768px) 50vw, 100vw';
 
 /** Galeria de fotos reais, exibida dentro da seção "O estúdio". */
 export function Gallery() {
@@ -15,9 +15,9 @@ export function Gallery() {
     <div id="galeria" className="mq-gallery-block" role="group" aria-labelledby="galeria-title">
       <div className="mq-gallery-block__head">
         <h3 id="galeria-title" className="mq-display mq-gallery-block__title">
-          A sala, sem filtro
+          nosso espaço
         </h3>
-        <p className="mq-muted mb-0">Fotos reais do espaço. Toque para ampliar.</p>
+        
       </div>
       <div className="mq-gallery">
         {ITEMS.map((photo, i) => (
@@ -28,7 +28,7 @@ export function Gallery() {
             onClick={() => setOpen(i)}
             aria-label={`Ampliar foto: ${photo.caption}`}
           >
-            <Picture photo={photo} sizes={SIZES[i]} />
+            <Picture photo={photo} sizes={SIZES} />
             <span className="mq-label" aria-hidden="true">
               {photo.caption}
             </span>
@@ -46,7 +46,7 @@ function Lightbox({ index, onChange, onClose }: { index: number; onChange: (i: n
   const photo = ITEMS[index];
   const go = (delta: number) => onChange((index + delta + ITEMS.length) % ITEMS.length);
   // Fotos inteiras abrem na maior resolução disponível.
-  const src = photo.srcSet ? photo.src.replace('-960.', '-1280.') : photo.src;
+  const src = photo.srcSet ? photo.src.replace('-960.', '-1195.') : photo.src;
 
   return (
     <div

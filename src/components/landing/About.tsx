@@ -38,7 +38,6 @@ export function About() {
             ))}
 
             <div className="mq-about__facts">
-              <FactList title="O que tem na sala" items={about.equipment} />
               <FactList title="Diferenciais" items={about.highlights} />
               <FactList title="Trabalhos" items={about.workTypes} />
               <div className="mq-about__fact">

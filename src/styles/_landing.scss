@@ -39,15 +39,28 @@
         object-position: 62% 40%;
       }
     }
+    // Tinge a foto de vinho (cor do logo) sem escurecer; o degradê de leitura vem por cima.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(160deg, var(--mq-wine-bright) 0%, var(--mq-wine) 55%, var(--mq-wine-deep) 100%);
+      mix-blend-mode: color;
+      opacity: 0.85;
+      pointer-events: none;
+    }
     &::after {
+      z-index: 1;
       content: '';
       position: absolute;
       inset: 0;
       background:
         linear-gradient(to top, var(--mq-bg) 0%, rgba(18, 13, 15, 0.6) 28%, rgba(18, 13, 15, 0.08) 60%, rgba(18, 13, 15, 0.5) 100%);
       @media (min-width: 992px) {
+        // Escurece o centro, onde ficam o logo e o texto.
         background:
-          linear-gradient(90deg, rgba(18, 13, 15, 0.95) 0%, rgba(18, 13, 15, 0.7) 42%, rgba(18, 13, 15, 0.1) 75%),
+          radial-gradient(ellipse 60% 70% at 50% 50%, rgba(18, 13, 15, 0.8) 0%, rgba(18, 13, 15, 0.45) 60%, rgba(18, 13, 15, 0.2) 100%),
           linear-gradient(to top, var(--mq-bg) 0%, rgba(18, 13, 15, 0) 30%);
       }
     }
@@ -55,6 +68,8 @@
 
   &__content {
     max-width: 40rem;
+    margin: 0 auto;
+    text-align: center;
   }
 
   &__eyebrow {
@@ -66,13 +81,16 @@
   }
 
   &__title {
-    font-size: clamp(3.4rem, 15.5vw, 7.25rem);
-    line-height: 0.92;
     margin: 0;
-    padding: 0.9rem 0 1rem;
-    span {
-      display: block;
-    }
+    padding: 1.25rem 0 1.4rem;
+  }
+
+  // Animado por useHeroLogoDock: sobe e encolhe até o logo do cabeçalho.
+  &__logo {
+    width: min(100%, 30rem);
+    margin: 0 auto;
+    transform-origin: 0 0;
+    will-change: transform;
   }
 
   &__subtitle {
@@ -80,6 +98,8 @@
     font-size: 1.0625rem;
     color: var(--mq-cream-80);
     max-width: 34rem;
+    margin-inline: auto;
+    text-align-last: center;
     @media (min-width: 992px) {
       font-size: 1.1875rem;
     }
@@ -88,6 +108,7 @@
   &__actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.75rem;
     .mq-btn {
       flex: 1 1 auto;
@@ -247,6 +268,16 @@
   @media (min-width: 992px) {
     padding: 2.5rem 2.25rem 2.25rem;
   }
+  // As 4 partes do card (topo, título, textos, equipamento) seguem as
+  // mesmas linhas da grade: os "Equipamento" ficam alinhados entre os cards.
+  @supports (grid-template-rows: subgrid) {
+    @media (min-width: 768px) {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
+  }
   &:hover {
     border-color: var(--mq-line-strong);
   }
@@ -291,29 +322,68 @@
     color: var(--mq-cream-60);
     font-size: 0.9375rem;
   }
-  &__meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 1.5rem 0;
-    padding-top: 1rem;
+  // Lista recolhível (<details>): só abre quando a pessoa clica.
+  &__equipment {
+    margin-top: 1.5rem;
     border-top: 1px solid var(--mq-line);
-    color: var(--mq-cream-80);
-    font-size: 0.9375rem;
-  }
-  .mq-btn {
-    margin-top: auto;
+    summary {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-height: 44px;
+      cursor: pointer;
+      list-style: none;
+      color: var(--mq-cream-80);
+      transition: color 0.2s var(--mq-ease);
+      &::-webkit-details-marker {
+        display: none;
+      }
+      &:hover {
+        color: var(--mq-cream);
+      }
+      span {
+        color: var(--mq-cream-40);
+      }
+      svg {
+        margin-left: auto;
+        transition: transform 0.2s var(--mq-ease);
+      }
+    }
+    &[open] summary svg {
+      transform: rotate(180deg);
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-top: 1px solid var(--mq-line);
+    }
+    li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--mq-line);
+      font-size: 0.9375rem;
+      color: var(--mq-cream-80);
+      &::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: var(--mq-cream);
+        flex-shrink: 0;
+        transform: translateY(-2px);
+      }
+    }
   }
 }
 
 // ── Galeria ───────────────────────────────────────────────────────────────
 .mq-gallery {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  @media (min-width: 992px) {
-    grid-template-columns: 2fr 1fr 1fr;
-    grid-template-rows: 240px 240px;
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
 
@@ -325,6 +395,7 @@
     overflow: hidden;
     cursor: zoom-in;
     border-radius: var(--mq-radius);
+    aspect-ratio: 4 / 3;
     img {
       width: 100%;
       height: 100%;
@@ -333,30 +404,6 @@
     }
     &:hover img {
       transform: scale(1.03);
-    }
-    &:nth-child(1) {
-      grid-column: span 2;
-      aspect-ratio: 4 / 3;
-    }
-    &:nth-child(2),
-    &:nth-child(3) {
-      aspect-ratio: 3 / 4;
-    }
-    &:nth-child(4) {
-      grid-column: span 2;
-      aspect-ratio: 16 / 10;
-    }
-    @media (min-width: 992px) {
-      &:nth-child(n) {
-        aspect-ratio: auto;
-        grid-column: auto;
-      }
-      &:nth-child(1) {
-        grid-row: span 2;
-      }
-      &:nth-child(2) {
-        grid-row: span 2;
-      }
     }
     span {
       position: absolute;

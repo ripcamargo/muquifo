@@ -8,7 +8,7 @@ import { DoorOpen, Drum, Mic } from 'lucide-react';
 import type { ServiceType } from '../types';
 
 export const studio = {
-  name: 'Muquifo Home Studio',
+  name: 'Muquifo Homestudio',
   shortName: 'Muquifo',
 
   /** WhatsApp do estúdio: só dígitos, com código do país. */
@@ -16,34 +16,23 @@ export const studio = {
   whatsappDisplay: '+55 15 99811-0938',
 
   hero: {
-    eyebrow: 'Home studio · Ensaios, gravinas e viagens espaciais',
-    titleLines: ['Chega mais,', 'a sala é sua.'],
+    eyebrow: 'Ensaios, gravinas e viagens espaciais',
     subtitle:
       'Estúdio disponível para ensaios, gravações, podcasts, ensaios fotográficos e o que mais der na telha. Tudo pronto para você, sem complicação.',
   },
 
   about: {
-    title: 'Muquifo aconchegante e acessível pra tua arte',
+    title: 'Aconchegante e acessível pra tua arte',
     // [CONFIRMAR] Texto provisório — conte a história do estúdio com suas palavras.
     paragraphs: [
-      'O Muquifo é um home studio localizado em Sorocaba/SP, projetado com muito carinho (e bastante calma) para quem quer tocar seus projetos sem complicação: é chegar, ligar os cabos e fazer barulho.',
-      'Paredes tratadas, isolamento acústico, luz baixa e os equipamentos prontos na sala. Um espaço pequeno, de verdade, pensado para ensaios e gravações.',
-      'Estúdio de bairro, com preço acessível e sem frescura. São muitas histórias desde 2017, e agora o Muquifo abre as portas para o público. Cola com a gente!',
+      'Localizado em Sorocaba/SP, o Muquifo é nosso cantinho desde 2017. Depois de tantas histórias, ensaios e momentos vividos por aqui, chegou a hora de abrir as portas e deixar você fazer parte delas também.',
+      'Um espaço feito pra quem quer tirar as ideias do papel, juntar a banda e fazer som sem complicação. É chegar, plugar os instrumentos e tocar.',
+      'Somos um estúdio de bairro, compacto, autêntico, com preço acessível e sem frescura. Cola com a gente!',
     ],
     /** [CONFIRMAR] Cidade/região de atendimento. Ex.: 'Sorocaba – SP'. Vazio = não exibe. */
-    location: '',
+    location: 'Sorocaba/SP',
     /** Exibido no lugar do endereço. Ajuste se preferir divulgar o endereço completo. */
-    locationNote: 'Piazza di Roma, zona oeste de Sorocaba/SP (endereço completo enviado após a confirmação da reserva)',
-    /** [CONFIRMAR] Itens visíveis nas fotos. Confira, complete com marcas/modelos ou remova. */
-    equipment: [
-      'Bateria completa (com opção de aluguel de pratos)',
-      'Amp de guitarra – Meteoro Nitrous 100g (100 W) 2x10',
-      'Amp de guitarra – Meteoro Demolidor FWB-20 (20 W) 1x10',
-      'Cubo de baixo – Voxstorm Cube Bass 125 (75 W) 1x12',
-      'Mesa de som Behringer Xenyx 1202FX',
-      'PA ativo Staner SR-315A (300 W RMS) + PA ativo Mark Audio 1200 (200 W RMS)',
-      'Ar-condicionado',
-    ],
+    locationNote: 'Piazza di Roma',
     /** [CONFIRMAR] Diferenciais reais do estúdio. Vazio = não exibe. */
     highlights: [] as string[],
     /** [CONFIRMAR] Tipos de trabalho realizados. Vazio = não exibe. */
@@ -53,7 +42,7 @@ export const studio = {
   privacy: {
     /** Atualize a data sempre que mudar o texto da política. */
     version: '2026-10-20',
-    controller: 'Muquifo Home Studio',
+    controller: 'Muquifo Homestudio',
     /** [CONFIRMAR] Prazo de guarda dos dados de pedidos. */
     retention: 'até 12 meses após o último contato',
   },
@@ -67,6 +56,8 @@ export interface ServiceInfo {
   icon: LucideIcon;
   summary: string;
   audience: string;
+  /** Equipamentos da sala disponíveis neste serviço. Vazio = não exibe a lista. */
+  equipment: string[];
   /** Campos extras pedidos na etapa de detalhes. */
   fields: {
     projectLabel: string;
@@ -88,6 +79,16 @@ export const services: ServiceInfo[] = [
     icon: Drum,
     summary: 'Sala pronta para a banda passar o repertório, testar arranjos e afinar o som.',
     audience: 'Para bandas, músicos e projetos musicais.',
+    // [CONFIRMAR] Confira os itens e complete com marcas/modelos.
+    equipment: [
+      'Bateria completa (com opção de aluguel de pratos)',
+      'Amp de guitarra – Meteoro Nitrous 100g (100 W) 2x10',
+      'Amp de guitarra – Meteoro Demolidor FWB-20 (20 W) 1x10',
+      'Cubo de baixo – Voxstorm Cube Bass 125 (75 W) 1x12',
+      'Mesa de som Behringer Xenyx 1202FX',
+      'PA ativo Staner SR-315A (300 W RMS) + PA ativo Mark Audio 1200 (200 W RMS)',
+      'Ar-condicionado, tratamento e isolamento acústico',
+    ],
     fields: { projectLabel: 'Nome da banda ou projeto', askPeople: true, askDescription: false },
   },
   {
@@ -97,6 +98,14 @@ export const services: ServiceInfo[] = [
     icon: Mic,
     summary: 'Horário reservado para registrar instrumentos, voz e ideias com a estrutura da sala.',
     audience: 'Para artistas, bandas e projetos compatíveis com a estrutura do estúdio.',
+    // [CONFIRMAR] Cadastre os microfones (marca/modelo) e o restante do equipamento de gravação.
+    equipment: [
+      'Mesa de som Behringer Xenyx 1202FX',
+      'Interface de áudio Behringer UM2 USB - 2 canais',
+      '1x Microfone condensador Behringer B-1',
+      '3x Microfone dinâmico Arcano A57',
+      'Ar-condicionado, tratamento e isolamento acústico',
+    ],
     fields: {
       projectLabel: 'Artista, banda ou projeto',
       askPeople: false,
@@ -113,6 +122,12 @@ export const services: ServiceInfo[] = [
     icon: DoorOpen,
     summary: 'A sala por algumas horas para o que você precisar: podcast, ensaio fotográfico, vídeo, aula ou reunião criativa.',
     audience: 'Para criadores, fotógrafos e projetos que precisam de um espaço com cara de estúdio.',
+    // [CONFIRMAR] Confira os itens.
+    equipment: [
+      'Softbox, tripé e ring light para ensaios fotográficos',
+      'Parede com fundo branco ou verde chroma key para ensaios fotográficos e gravações de vídeo',
+      'Ar-condicionado, tratamento e isolamento acústico',
+    ],
     fields: {
       projectLabel: 'Nome do projeto ou empresa',
       askPeople: true,
