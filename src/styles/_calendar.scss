@@ -168,3 +168,201 @@
     }
   }
 }
+
+// ── Semana (agendamento do cliente) ───────────────────────────────────────
+.mq-week {
+  --mq-hour: 34px;
+  border: 1px solid var(--mq-line);
+  border-radius: var(--mq-radius);
+  background: var(--mq-bg-raised);
+  overflow: hidden;
+  @media (min-width: 576px) {
+    --mq-hour: 40px;
+  }
+  &__head,
+  &__body {
+    display: grid;
+    grid-template-columns: 30px repeat(7, minmax(0, 1fr));
+    @media (min-width: 576px) {
+      grid-template-columns: 44px repeat(7, minmax(0, 1fr));
+    }
+  }
+  &__head {
+    border-bottom: 1px solid var(--mq-line-strong);
+  }
+  &__dayhead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.35rem 0;
+    border-left: 1px solid var(--mq-line);
+    small {
+      font-family: var(--mq-font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.6875rem;
+      color: var(--mq-cream-60);
+    }
+    b {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-family: var(--mq-font-display);
+      font-weight: 400;
+      font-size: 1rem;
+    }
+    &.is-past {
+      opacity: 0.5;
+    }
+    &.is-today b {
+      background: var(--mq-wine-bright);
+    }
+  }
+  &__body {
+    position: relative;
+    height: calc(var(--mq-hour) * var(--mq-rows));
+  }
+  &__hours {
+    position: relative;
+    span {
+      position: absolute;
+      right: 4px;
+      transform: translateY(-50%);
+      font-size: 0.625rem;
+      color: var(--mq-cream-40);
+      font-variant-numeric: tabular-nums;
+    }
+    span:first-child {
+      transform: translateY(2px);
+    }
+  }
+  &__col {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-left: 1px solid var(--mq-line);
+    background-color: transparent;
+    background-image: linear-gradient(to bottom, var(--mq-line) 1px, transparent 1px);
+    background-size: 100% var(--mq-hour);
+    color: inherit;
+    cursor: not-allowed;
+    &:not(:disabled) {
+      cursor: pointer;
+      &:hover {
+        background-color: rgba(236, 231, 211, 0.05);
+      }
+    }
+    &:focus-visible {
+      outline: 2px solid var(--mq-cream);
+      outline-offset: -2px;
+      z-index: 2;
+    }
+    &[aria-pressed='true'] {
+      box-shadow: inset 0 0 0 2px var(--mq-cream);
+    }
+    &.is-today {
+      background-color: rgba(138, 29, 59, 0.08);
+    }
+  }
+  &__seg {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: var(--mq-radius);
+    em {
+      font-style: normal;
+      font-size: 0.625rem;
+      line-height: 1.15;
+      font-weight: 600;
+      text-align: center;
+      color: var(--mq-ok);
+      font-variant-numeric: tabular-nums;
+    }
+    &.is-livre {
+      background: rgba(143, 207, 156, 0.18);
+      border: 1px solid rgba(143, 207, 156, 0.7);
+    }
+    &.is-ocupado {
+      background: repeating-linear-gradient(135deg, var(--mq-wine-bright) 0 4px, var(--mq-wine-deep) 4px 8px);
+    }
+    &.is-em_analise {
+      background: repeating-linear-gradient(90deg, rgba(232, 176, 79, 0.75) 0 2px, transparent 2px 6px);
+      border: 1px dashed rgba(232, 176, 79, 0.6);
+    }
+    &.is-indisponivel,
+    &.is-off {
+      left: 0;
+      right: 0;
+      border-radius: 0;
+      background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(236, 231, 211, 0.1) 5px 6px), rgba(0, 0, 0, 0.18);
+    }
+  }
+}
+
+.mq-view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  &__tabs {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--mq-line-strong);
+    border-radius: var(--mq-radius);
+    overflow: hidden;
+    button {
+      min-height: 44px;
+      padding: 0 1.1rem;
+      background: transparent;
+      border: 0;
+      color: var(--mq-cream-80);
+      font-size: 0.9375rem;
+      cursor: pointer;
+      & + button {
+        border-left: 1px solid var(--mq-line-strong);
+      }
+      &[aria-checked='true'] {
+        background: var(--mq-cream);
+        color: var(--mq-wine);
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.mq-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  h4 {
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    font-family: var(--mq-font-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 1.0625rem;
+  }
+  .mq-icon-btn {
+    border: 1px solid var(--mq-line-strong);
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.mq-share {
+  margin-top: 1rem;
+}

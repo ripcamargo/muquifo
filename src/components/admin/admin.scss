@@ -1,4 +1,5 @@
 // Estilos do painel (pacote separado, carregado só em /admin).
+@use './calendar/calendar';
 
 .adm {
   min-height: 100vh;

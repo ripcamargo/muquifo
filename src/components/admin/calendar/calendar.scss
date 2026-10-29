@@ -1,0 +1,450 @@
+// Calendário do painel (semana e mês).
+
+.adm-cal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.adm-cal-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  .adm-segment {
+    margin: 0;
+    min-width: 200px;
+  }
+}
+.adm-segment--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.adm-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.adm-cal-title {
+  margin: 0 0 0 0.5rem;
+  font-family: var(--mq-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 1.5rem;
+  letter-spacing: 0.01em;
+}
+
+// Cores por situação (cartões e legenda usam as mesmas).
+.adm-week,
+.adm-month,
+.adm-cal-legend.adm-legend {
+  --ev-confirmado: #1f5a3a;
+  --ev-confirmado-bd: var(--mq-ok);
+  --ev-hold: #3b2e17;
+  --ev-hold-bd: var(--mq-warn);
+  --ev-new: #232a31;
+  --ev-new-bd: var(--mq-info);
+  --hatch: repeating-linear-gradient(135deg, transparent 0 5px, rgba(236, 231, 211, 0.1) 5px 6px);
+}
+
+.adm-week {
+  --adm-hour: 52px;
+  border: 1px solid var(--mq-line);
+  border-radius: var(--mq-radius);
+  background: var(--mq-bg-raised);
+  overflow: auto;
+  max-height: calc(100vh - 290px);
+  min-height: 420px;
+  @media (max-width: 767.98px) {
+    --adm-hour: 46px;
+    max-height: calc(100vh - 230px);
+  }
+  &__inner {
+    min-width: 760px;
+  }
+  &__head,
+  &__body {
+    display: grid;
+    grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  }
+  &__head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--mq-bg-raised);
+    border-bottom: 1px solid var(--mq-line-strong);
+  }
+  &__dayhead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-left: 1px solid var(--mq-line);
+    small {
+      font-family: var(--mq-font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-size: 0.75rem;
+      color: var(--mq-cream-60);
+    }
+    b {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-family: var(--mq-font-display);
+      font-weight: 400;
+      font-size: 1.2rem;
+    }
+    &.is-past {
+      opacity: 0.55;
+    }
+    &.is-today b {
+      background: var(--mq-wine-bright);
+    }
+  }
+  &__body {
+    position: relative;
+    height: calc(var(--adm-hour) * var(--adm-rows));
+  }
+  &__hours {
+    position: relative;
+    span {
+      position: absolute;
+      right: 8px;
+      transform: translateY(-50%);
+      font-size: 0.6875rem;
+      color: var(--mq-cream-40);
+      font-variant-numeric: tabular-nums;
+    }
+    span:first-child {
+      transform: translateY(2px);
+    }
+  }
+  &__col {
+    position: relative;
+    border-left: 1px solid var(--mq-line);
+    cursor: cell;
+    background-image: linear-gradient(to bottom, var(--mq-line) 1px, transparent 1px);
+    background-size: 100% var(--adm-hour);
+    &:hover {
+      background-color: rgba(236, 231, 211, 0.025);
+    }
+    &.is-past {
+      background-color: rgba(0, 0, 0, 0.12);
+    }
+    &.is-today {
+      background-color: rgba(138, 29, 59, 0.07);
+    }
+  }
+  &__closedtag {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    font-family: var(--mq-font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.75rem;
+    color: var(--mq-cream-60);
+    pointer-events: none;
+  }
+  &__now {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    height: 2px;
+    background: var(--mq-rec);
+    pointer-events: none;
+    &::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: -4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--mq-rec);
+    }
+  }
+}
+
+.adm-ev {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.25rem 0.4rem;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--mq-cream);
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  border-radius: var(--mq-radius);
+  strong {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  small {
+    font-size: 0.6875rem;
+    color: var(--mq-cream-80);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &.is-short {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+  }
+  &--confirmado {
+    cursor: pointer;
+    background: var(--ev-confirmado);
+    border-color: var(--ev-confirmado-bd);
+  }
+  &--aguardando_confirmacao {
+    cursor: pointer;
+    background: var(--ev-hold);
+    border: 1px dashed var(--ev-hold-bd);
+    border-left: 4px solid var(--ev-hold-bd);
+  }
+  &--pedido_preparado {
+    cursor: pointer;
+    background: var(--ev-new);
+    border: 1px dotted var(--ev-new-bd);
+    border-left: 4px dotted var(--ev-new-bd);
+  }
+  &:is(button):not(:disabled):hover {
+    filter: brightness(1.2);
+  }
+  &:disabled {
+    cursor: default;
+  }
+  &--closed {
+    z-index: 0;
+    padding: 0;
+    border: 0;
+    background: var(--hatch), rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+  }
+  &--block {
+    z-index: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.3rem;
+    cursor: default;
+    color: var(--mq-warn);
+    background: repeating-linear-gradient(135deg, rgba(232, 176, 79, 0.16) 0 6px, rgba(232, 176, 79, 0.05) 6px 12px);
+    border: 1px dashed rgba(232, 176, 79, 0.55);
+    small {
+      color: var(--mq-warn);
+    }
+  }
+}
+
+.adm-month {
+  border: 1px solid var(--mq-line);
+  border-radius: var(--mq-radius);
+  background: var(--mq-bg-raised);
+  overflow-x: auto;
+  &__head,
+  &__week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    min-width: 680px;
+  }
+  &__head {
+    border-bottom: 1px solid var(--mq-line-strong);
+    span {
+      padding: 0.5rem 0;
+      text-align: center;
+      font-family: var(--mq-font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-size: 0.75rem;
+      color: var(--mq-cream-60);
+    }
+  }
+  &__week + &__week {
+    border-top: 1px solid var(--mq-line);
+  }
+  &__cell {
+    position: relative;
+    min-height: 118px;
+    padding: 0.3rem 0.35rem 0.4rem;
+    border-left: 1px solid var(--mq-line);
+    cursor: pointer;
+    &:first-child {
+      border-left: 0;
+    }
+    &:hover {
+      background: rgba(236, 231, 211, 0.04);
+    }
+    &.is-outside {
+      opacity: 0.45;
+    }
+    &.is-past:not(.is-today) {
+      background: rgba(0, 0, 0, 0.14);
+    }
+    &.is-closed {
+      background: var(--hatch), rgba(0, 0, 0, 0.1);
+    }
+    &.is-today .adm-month__num {
+      background: var(--mq-wine-bright);
+    }
+  }
+  &__num {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    font-family: var(--mq-font-display);
+    font-size: 1.05rem;
+    cursor: pointer;
+  }
+  &__tag {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.5rem;
+    font-family: var(--mq-font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.625rem;
+    color: var(--mq-cream-40);
+  }
+  &__events {
+    display: grid;
+    gap: 2px;
+    margin-top: 0.2rem;
+  }
+}
+
+.adm-chip {
+  display: block;
+  width: 100%;
+  padding: 0.12rem 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font: inherit;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--mq-cream);
+  border: 1px solid transparent;
+  border-left-width: 3px;
+  border-radius: var(--mq-radius);
+  cursor: pointer;
+  b {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  &:disabled {
+    cursor: default;
+  }
+  &--confirmado {
+    background: var(--ev-confirmado);
+    border-color: var(--ev-confirmado-bd);
+  }
+  &--aguardando_confirmacao {
+    background: var(--ev-hold);
+    border: 1px dashed var(--ev-hold-bd);
+    border-left: 3px solid var(--ev-hold-bd);
+  }
+  &--pedido_preparado {
+    background: var(--ev-new);
+    border: 1px dotted var(--ev-new-bd);
+    border-left: 3px dotted var(--ev-new-bd);
+  }
+  &__more {
+    padding-left: 0.35rem;
+    font-size: 0.6875rem;
+    color: var(--mq-cream-60);
+  }
+}
+
+.adm-cal-legend.adm-legend {
+  list-style: none;
+  padding: 0;
+  i {
+    width: 20px;
+    height: 12px;
+    vertical-align: -1px;
+    &.is-confirmado {
+      background: var(--ev-confirmado);
+      border-color: var(--ev-confirmado-bd);
+    }
+    &.is-aguardando_confirmacao {
+      background: var(--ev-hold);
+      border: 1px dashed var(--ev-hold-bd);
+    }
+    &.is-pedido_preparado {
+      background: var(--ev-new);
+      border: 1px dotted var(--ev-new-bd);
+    }
+    &.is-block {
+      background: repeating-linear-gradient(135deg, rgba(232, 176, 79, 0.4) 0 3px, rgba(232, 176, 79, 0.1) 3px 6px);
+      border: 1px dashed rgba(232, 176, 79, 0.7);
+    }
+    &.is-closed {
+      background: repeating-linear-gradient(135deg, transparent 0 3px, rgba(236, 231, 211, 0.3) 3px 4px);
+    }
+  }
+}
+
+.adm-booking-dialog {
+  max-width: 560px;
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  &__grid {
+    display: grid;
+    gap: 0 0.75rem;
+    @media (min-width: 576px) {
+      grid-template-columns: 1fr 1fr;
+    }
+    &--3 {
+      grid-template-columns: 1fr 1fr;
+      > :first-child {
+        grid-column: 1 / -1;
+      }
+      @media (min-width: 576px) {
+        grid-template-columns: 1.4fr 1fr 1fr;
+        > :first-child {
+          grid-column: auto;
+        }
+      }
+    }
+  }
+  .mq-input {
+    min-height: 46px;
+    font-size: 1rem;
+  }
+}

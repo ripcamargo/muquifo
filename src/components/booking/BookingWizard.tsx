@@ -4,6 +4,7 @@ import { useBookingDraft } from '../../hooks/useBookingDraft';
 import { updateLeadProgress, type LeadProgress } from '../../services/leads';
 import type { BookingStep, ISODate, ServiceType } from '../../types';
 import { onBookingRequest, takePendingService } from '../../utils/bookingIntent';
+import { weekDates, type CalendarView } from '../../utils/agendaView';
 import { monthOf, monthRange, zonedNow } from '../../utils/datetime';
 import { firstName } from '../../utils/text';
 import { StepContact } from './StepContact';
@@ -27,6 +28,8 @@ const STEPS: { id: BookingStep; label: string }[] = [
 export default function BookingWizard() {
   const { draft, restored, update, reset, dismissRestored } = useBookingDraft();
   const [month, setMonth] = useState(() => monthOf(draft.date ?? zonedNow().date));
+  const [view, setView] = useState<CalendarView>('semana');
+  const [weekAnchor, setWeekAnchor] = useState<ISODate>(() => draft.date ?? zonedNow().date);
   const [slotLost, setSlotLost] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
@@ -39,7 +42,8 @@ export default function BookingWizard() {
     : ['detalhes', 'revisao'].includes(draft.step) && !draft.slot ? 'horario'
     : draft.step;
 
-  const { first, last } = monthRange(month);
+  const week = weekDates(weekAnchor);
+  const { first, last } = view === 'semana' ? { first: week[0], last: week[6] } : monthRange(month);
   const availability = useAvailability(first, last, step === 'data' || step === 'horario');
 
   // Atualiza o lead em segundo plano; falhas não travam o visitante (o envio final grava tudo).
@@ -95,6 +99,8 @@ export default function BookingWizard() {
   }, [step, draft.service, update, chooseService, syncLead]);
 
   const pickDate = (date: ISODate) => {
+    setWeekAnchor(date);
+    setMonth(monthOf(date));
     update((d) => ({ date, step: 'horario', ...(d.date !== date ? { slot: null } : {}) }));
     setSlotLost(false);
     syncLead({ currentStep: 'horario' });
@@ -140,7 +146,17 @@ export default function BookingWizard() {
         {step === 'contato' && <StepContact {...props} />}
         {step === 'servico' && <StepService {...props} onChoose={chooseService} />}
         {step === 'data' && (
-          <StepDate {...props} availability={availability} month={month} setMonth={setMonth} onPick={pickDate} />
+          <StepDate
+            {...props}
+            availability={availability}
+            month={month}
+            setMonth={setMonth}
+            view={view}
+            setView={setView}
+            weekAnchor={weekAnchor}
+            setWeekAnchor={setWeekAnchor}
+            onPick={pickDate}
+          />
         )}
         {step === 'horario' && (
           <StepTime

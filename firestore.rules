@@ -84,6 +84,27 @@ service cloud.firestore {
         && request.resource.data.lastActivityAt == request.time
         && throttleAfter().leadAt == request.time;
 
+      // Administrador: registra um cliente que pediu fora do site (ex.: WhatsApp), junto do pedido.
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+             'name', 'whatsapp', 'whatsappNormalized', 'source', 'status', 'currentStep', 'sessionId',
+             'serviceType', 'bookingRequestId', 'privacyNoticeVersion', 'ownerUid',
+             'createdAt', 'updatedAt', 'lastActivityAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.sessionId == leadId
+        && validName(request.resource.data.name)
+        && validPhoneDisplay(request.resource.data.whatsapp)
+        && validPhone(request.resource.data.whatsappNormalized)
+        && request.resource.data.source == 'admin'
+        && request.resource.data.status in ['aguardando_confirmacao', 'confirmado']
+        && request.resource.data.currentStep == 'enviado'
+        && validService(request.resource.data.serviceType)
+        && request.resource.data.bookingRequestId == leadId
+        && str(request.resource.data.privacyNoticeVersion, 1, 20)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastActivityAt == request.time;
+
       // Administrador: pode alterar status e anotações (os demais campos ficam como o visitante enviou).
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt'])
@@ -141,6 +162,32 @@ service cloud.firestore {
         && validVisitorRequest(request.resource.data)
         && request.resource.data.createdAt == request.time
         && throttleAfter().requestAt == request.time;
+
+      // Administrador: agendamento feito por ele (cliente que chamou fora do site).
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+             'leadId', 'ownerUid', 'name', 'whatsapp', 'whatsappNormalized', 'serviceType', 'projectName',
+             'peopleCount', 'description', 'notes', 'requestedDate', 'startTime', 'endTime', 'status',
+             'adminNotes', 'createdAt', 'updatedAt', 'confirmedAt'])
+        && request.resource.data.leadId == requestId
+        && request.resource.data.ownerUid == request.auth.uid
+        && validName(request.resource.data.name)
+        && validPhoneDisplay(request.resource.data.whatsapp)
+        && validPhone(request.resource.data.whatsappNormalized)
+        && validService(request.resource.data.serviceType)
+        && str(request.resource.data.projectName, 0, 120)
+        && (request.resource.data.peopleCount == null
+            || (request.resource.data.peopleCount is int && request.resource.data.peopleCount >= 1 && request.resource.data.peopleCount <= 50))
+        && str(request.resource.data.description, 0, 1000)
+        && str(request.resource.data.notes, 0, 1000)
+        && str(request.resource.data.adminNotes, 0, 2000)
+        && validDate(request.resource.data.requestedDate)
+        && validTime(request.resource.data.startTime)
+        && validTime(request.resource.data.endTime)
+        && request.resource.data.endTime > request.resource.data.startTime
+        && request.resource.data.status in ['aguardando_confirmacao', 'confirmado']
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
 
       // Visitante pode reenviar (ex.: trocou o horário) enquanto o estúdio não mexeu no pedido.
       allow update: if signedIn()

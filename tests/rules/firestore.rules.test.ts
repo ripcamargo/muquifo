@@ -156,6 +156,16 @@ describe('leads', () => {
     await assertSucceeds(admin().doc(`leads/${LEAD}`).delete());
   });
 
+  it('administrador registra agendamento feito fora do site; os outros não', async () => {
+    const lead = { ...leadData('admin-1'), source: 'admin', status: 'confirmado', currentStep: 'enviado', serviceType: 'ensaio', bookingRequestId: LEAD };
+    const request = { ...requestData('admin-1', { status: 'confirmado', adminNotes: '', confirmedAt: ts() }), updatedAt: ts() };
+    await assertSucceeds(admin().doc(`leads/${LEAD}`).set(lead));
+    await assertSucceeds(admin().doc(`bookingRequests/${LEAD}`).set(request));
+    await assertFails(admin().doc(`bookingRequests/${OTHER_LEAD}`).set({ ...request, leadId: OTHER_LEAD, status: 'recusado' }));
+    await assertFails(visitor().doc(`leads/${OTHER_LEAD}`).set({ ...lead, ownerUid: 'visitor-1', sessionId: OTHER_LEAD, bookingRequestId: OTHER_LEAD }));
+    await assertFails(stranger().doc(`bookingRequests/${OTHER_LEAD}`).set({ ...request, leadId: OTHER_LEAD, ownerUid: 'random-user' }));
+  });
+
   it('conta não administradora não lê nada', async () => {
     await createLeadAs(visitor(), 'visitor-1');
     await assertFails(stranger().doc(`leads/${LEAD}`).get());

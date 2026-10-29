@@ -1,4 +1,4 @@
-import { CalendarCog, Inbox, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { CalendarCog, CalendarDays, Inbox, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, NavLink } from 'react-router';
 import { ACTIVE_REQUEST_STATUSES } from '../../config/status';
@@ -37,6 +37,9 @@ export function AdminLayout({ email, onSignOut, children }: Props) {
         <div className="container adm-nav__list">
           <NavLink to="/admin" end>
             <LayoutDashboard size={18} aria-hidden="true" /> Visão geral
+          </NavLink>
+          <NavLink to="/admin/calendario">
+            <CalendarDays size={18} aria-hidden="true" /> Calendário
           </NavLink>
           <NavLink to="/admin/pedidos">
             <Inbox size={18} aria-hidden="true" /> Pedidos

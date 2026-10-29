@@ -10,6 +10,7 @@ import { Alert } from '../ui/Alert';
 import { AdminDataProvider } from './AdminData';
 import { AdminLayout } from './AdminLayout';
 import { AvailabilityPage } from './availability/AvailabilityPage';
+import { CalendarPage } from './calendar/CalendarPage';
 import { DashboardPage } from './DashboardPage';
 import { LeadsPage } from './LeadsPage';
 import { LoginScreen } from './LoginScreen';
@@ -95,7 +96,8 @@ export default function AdminApp() {
       <AdminLayout email={state.user.email ?? ''} onSignOut={signOut}>
         <Routes>
           <Route index element={<DashboardPage />} />
-          <Route path="pedidos" element={<RequestsPage />} />
+          <Route path="calendario" element={<CalendarPage />} />
+          <Route path="pedidos"element={<RequestsPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="disponibilidade" element={<AvailabilityPage />} />
           <Route path="*" element={<DashboardPage />} />

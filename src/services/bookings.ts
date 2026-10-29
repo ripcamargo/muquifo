@@ -1,4 +1,5 @@
 import {
+  doc,
   limit,
   onSnapshot,
   orderBy,
@@ -9,10 +10,11 @@ import {
   writeBatch,
   type DocumentSnapshot,
 } from 'firebase/firestore';
+import { studio } from '../config/studio';
 import { SERVICE_TYPES, type BookingRequest, type HHMM, type ISODate, type Occupation, type RequestStatus, type ServiceType } from '../types';
 import { findConflicts } from '../utils/slots';
 import { dayRef, parseDay, parseSettings } from './availability';
-import { ensureVisitorUser } from './firebase/auth';
+import { currentUid, ensureVisitorUser } from './firebase/auth';
 import { col, COLLECTIONS, db, num, ref, SETTINGS_DOC, str, toDate } from './firebase/db';
 import { isPermissionDenied, withTimeout } from './firebase/errors';
 
@@ -195,4 +197,90 @@ export async function deleteBookingData(leadId: string) {
     }),
     20_000,
   );
+}
+
+export interface AdminBookingInput {
+  name: string;
+  whatsapp: string;
+  whatsappNormalized: string;
+  serviceType: ServiceType;
+  projectName: string;
+  peopleCount: number | null;
+  description: string;
+  notes: string;
+  adminNotes: string;
+  requestedDate: ISODate;
+  startTime: HHMM;
+  endTime: HHMM;
+  /** Confirmado ocupa a agenda; em análise apenas retém o horário. */
+  status: Extract<RequestStatus, 'confirmado' | 'aguardando_confirmacao'>;
+}
+
+/**
+ * Administrador: registra um agendamento de quem pediu fora do site (ex.: WhatsApp).
+ * Cria lead + pedido com o mesmo id e atualiza a ocupação do dia na mesma transação.
+ * Só reservas confirmadas de outras pessoas impedem o horário; expediente e bloqueios são decisão do administrador.
+ */
+export async function createAdminBooking(input: AdminBookingInput): Promise<string> {
+  const ownerUid = currentUid();
+  if (!ownerUid) throw new Error('Sessão expirada. Entre novamente.');
+  const id = doc(col(COLLECTIONS.leads)).id;
+
+  await withTimeout(
+    runTransaction(db(), async (tx) => {
+      const [daySnap, settingsSnap] = await Promise.all([
+        tx.get(dayRef(input.requestedDate)),
+        tx.get(ref(COLLECTIONS.settings, SETTINGS_DOC)),
+      ]);
+      const day = parseDay(input.requestedDate, daySnap.data());
+      const occupation: Occupation = { ref: id, start: input.startTime, end: input.endTime, service: input.serviceType };
+      let { booked, holds } = day;
+
+      if (input.status === 'confirmado') {
+        const buffer = settingsSnap.exists() ? parseSettings(settingsSnap.data()).booking.bufferMin : 0;
+        const conflicts = findConflicts({ ...day, mode: 'padrao', blocks: [] }, occupation, buffer);
+        if (conflicts.length) throw new SlotConflictError(conflicts);
+        booked = [...booked, occupation];
+      } else {
+        holds = [...holds, occupation];
+      }
+
+      const { adminNotes, ...request } = input;
+      tx.set(ref(COLLECTIONS.leads, id), {
+        name: input.name,
+        whatsapp: input.whatsapp,
+        whatsappNormalized: input.whatsappNormalized,
+        source: 'admin',
+        status: input.status,
+        currentStep: 'enviado',
+        sessionId: id,
+        serviceType: input.serviceType,
+        bookingRequestId: id,
+        privacyNoticeVersion: studio.privacy.version,
+        ownerUid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastActivityAt: serverTimestamp(),
+      });
+      tx.set(ref(COLLECTIONS.bookingRequests, id), {
+        ...request,
+        adminNotes,
+        leadId: id,
+        ownerUid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        confirmedAt: input.status === 'confirmado' ? serverTimestamp() : null,
+      });
+      if (daySnap.exists()) {
+        tx.update(dayRef(input.requestedDate), { booked, holds, updatedAt: serverTimestamp() });
+      } else {
+        tx.set(dayRef(input.requestedDate), {
+          date: input.requestedDate, mode: 'padrao', intervals: [], extraIntervals: [], blocks: [],
+          booked, holds, updatedAt: serverTimestamp(),
+        });
+      }
+    }),
+    20_000,
+  );
+  return id;
 }
