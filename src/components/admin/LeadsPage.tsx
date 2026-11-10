@@ -34,7 +34,7 @@ const OPEN: LeadStatus[] = ['novo', 'em_andamento'];
 type Filter = 'todos' | 'sem_pedido' | 'com_pedido' | 'inativos';
 
 export function LeadsPage() {
-  const { leads, openRequest } = useAdminData();
+  const { leads, requests, openRequest } = useAdminData();
   const toast = useToast();
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('todos');
@@ -215,11 +215,11 @@ export function LeadsPage() {
         confirmLabel="Excluir definitivamente"
         danger
         loading={busy}
-        onConfirm={() => confirm?.kind === 'delete' && run(() => deleteBookingData(confirm.lead.id), 'Dados excluídos.')}
+        onConfirm={() => confirm?.kind === 'delete' && run(() => deleteBookingData(confirm.lead.id, (requests ?? []).filter((r) => r.leadId === confirm.lead.id).map((r) => r.id)), 'Dados excluídos.')}
         onCancel={() => setConfirm(null)}
       >
         {confirm?.kind === 'delete' && (
-          <>O lead de {confirm.lead.name} e o pedido ligado a ele (se houver) serão apagados. Não é possível desfazer.</>
+          <>O lead de {confirm.lead.name} e os pedidos ligados a ele (se houver) serão apagados. Não é possível desfazer.</>
         )}
       </ConfirmDialog>
 

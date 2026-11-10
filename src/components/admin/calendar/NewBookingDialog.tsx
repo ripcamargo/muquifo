@@ -4,9 +4,10 @@ import { services, serviceInfo } from '../../../config/studio';
 import { useModal } from '../../../hooks/useModal';
 import { createAdminBooking, SlotConflictError, type AdminBookingInput } from '../../../services/bookings';
 import { friendlyError } from '../../../services/firebase/errors';
-import type { AvailabilitySettings, CalendarDay, HHMM, ISODate, ServiceType } from '../../../types';
+import type { AvailabilitySettings, CalendarDay, HHMM, ISODate, Lead, ServiceType } from '../../../types';
 import { isISODate, minutesToTime, timeToMinutes } from '../../../utils/datetime';
-import { maskPhone, validatePhone } from '../../../utils/phone';
+import { formatNormalizedPhone, maskPhone, validatePhone } from '../../../utils/phone';
+import { useAdminData } from '../AdminData';
 import { cleanMultiline, collapseSpaces, validateName } from '../../../utils/text';
 import { Alert } from '../../ui/Alert';
 import { Button } from '../../ui/Button';
@@ -25,6 +26,8 @@ interface Props {
   days: Map<ISODate, CalendarDay>;
   onClose: () => void;
 }
+
+const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export function NewBookingDialog({ draft, settings, days, onClose }: Props) {
   const toast = useToast();
@@ -47,9 +50,39 @@ export function NewBookingDialog({ draft, settings, days, onClose }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string[] | null>(null);
 
+  const { leads } = useAdminData();
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [pickedLead, setPickedLead] = useState<string | null>(null);
+
+  // Um contato por WhatsApp (o mais recente), para sugerir sem repetir.
+  const contacts = useMemo(() => {
+    const byPhone = new Map<string, Lead>();
+    for (const l of leads ?? []) {
+      if (!l.name || !l.whatsappNormalized) continue;
+      const cur = byPhone.get(l.whatsappNormalized);
+      if (!cur || (l.createdAt?.getTime() ?? 0) > (cur.createdAt?.getTime() ?? 0)) byPhone.set(l.whatsappNormalized, l);
+    }
+    return [...byPhone.values()];
+  }, [leads]);
+
+  const suggestions = useMemo(() => {
+    const q = fold(name.trim());
+    if (q.length < 2 || pickedLead) return [];
+    return contacts.filter((l) => fold(l.name).includes(q)).slice(0, 6);
+  }, [contacts, name, pickedLead]);
+
+  function pickLead(l: Lead) {
+    setName(l.name);
+    setPhone(maskPhone(l.whatsappNormalized.replace(/^55/, '')));
+    setPickedLead(l.id);
+    setSuggestOpen(false);
+  }
+
   const info = serviceInfo(service);
   const nameCheck = validateName(name);
   const phoneCheck = validatePhone(phone);
+  // Mesmo WhatsApp = mesma pessoa: o agendamento entra no lead existente em vez de criar outro.
+  const matchedLead = phoneCheck.ok ? (contacts.find((c) => c.whatsappNormalized === phoneCheck.normalized) ?? null) : null;
   const dateOk = isISODate(date);
   const timeOk = !!start && !!end && timeToMinutes(end) > timeToMinutes(start);
   const peopleNumber = people ? Number(people) : null;
@@ -82,6 +115,7 @@ export function NewBookingDialog({ draft, settings, days, onClose }: Props) {
         startTime: start,
         endTime: end,
         status,
+        leadId: matchedLead?.id,
       });
       toast(status === 'confirmado' ? 'Agendamento confirmado na agenda.' : 'Horário retido como “em análise”.');
       onClose();
@@ -110,7 +144,47 @@ export function NewBookingDialog({ draft, settings, days, onClose }: Props) {
         <form onSubmit={submit} noValidate>
           <div className="adm-booking-dialog__grid">
             <Field label="Nome" error={submitted && !nameCheck.ok ? nameCheck.error : null}>
-              <input className="mq-input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" maxLength={80} data-autofocus />
+              <div>
+              <div className="adm-suggest">
+                <input
+                  className="mq-input"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setPickedLead(null);
+                    setSuggestOpen(true);
+                  }}
+                  onFocus={() => setSuggestOpen(true)}
+                  onBlur={() => setSuggestOpen(false)}
+                  autoComplete="off"
+                  maxLength={80}
+                  data-autofocus
+                />
+                {suggestOpen && suggestions.length > 0 && (
+                  <ul className="adm-suggest__list" role="listbox" aria-label="Contatos já cadastrados">
+                    {suggestions.map((l) => (
+                      <li key={l.id} role="option" aria-selected={false}>
+                        <button
+                          type="button"
+                          className="adm-suggest__item"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => pickLead(l)}
+                        >
+                          <strong>{l.name}</strong>
+                          <span>{formatNormalizedPhone(l.whatsappNormalized)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {matchedLead && (
+                <span className="mq-muted" style={{ fontSize: '0.8125rem' }}>
+                  Contato já cadastrado
+                  {matchedLead.name !== name.trim() ? ` como “${matchedLead.name}”` : ''} — o agendamento será ligado a ele.
+                </span>
+              )}
+              </div>
             </Field>
             <Field label="WhatsApp" error={submitted && !phoneCheck.ok ? phoneCheck.error : null}>
               <input
@@ -118,7 +192,10 @@ export function NewBookingDialog({ draft, settings, days, onClose }: Props) {
                 inputMode="tel"
                 placeholder="(15) 99999-9999"
                 value={phone}
-                onChange={(e) => setPhone(maskPhone(e.target.value))}
+                onChange={(e) => {
+                  setPhone(maskPhone(e.target.value));
+                  setPickedLead(null);
+                }}
                 autoComplete="off"
               />
             </Field>

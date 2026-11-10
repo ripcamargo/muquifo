@@ -64,6 +64,9 @@ function RequestDetail({ request: r, onClose }: { request: BookingRequest; onClo
   const [conflicts, setConflicts] = useState<string[] | null>(null);
   const [confirm, setConfirm] = useState<RequestStatus | 'delete' | null>(null);
   const [notes, setNotes] = useState(r.adminNotes);
+  const { requests } = useAdminData();
+  /** Todos os pedidos do mesmo lead (um contato pode ter vários agendamentos). */
+  const siblings = (requests ?? []).filter((s) => s.leadId === r.leadId);
 
 
   async function setStatus(next: RequestStatus) {
@@ -96,7 +99,7 @@ function RequestDetail({ request: r, onClose }: { request: BookingRequest; onClo
   async function remove() {
     setBusy('delete');
     try {
-      await deleteBookingData(r.leadId);
+      await deleteBookingData(r.leadId, siblings.map((s) => s.id));
       toast('Dados excluídos.');
       onClose();
     } catch (err) {
@@ -247,7 +250,7 @@ function RequestDetail({ request: r, onClose }: { request: BookingRequest; onClo
         <section className="adm-drawer__section">
           <h3>Dados pessoais</h3>
           <Button variant="danger" size="sm" icon={<Trash2 size={16} aria-hidden="true" />} onClick={() => setConfirm('delete')}>
-            Excluir lead e pedido
+            {siblings.length > 1 ? 'Excluir lead e pedidos' : 'Excluir lead e pedido'}
           </Button>
         </section>
       </div>
@@ -261,7 +264,10 @@ function RequestDetail({ request: r, onClose }: { request: BookingRequest; onClo
         onConfirm={remove}
         onCancel={() => setConfirm(null)}
       >
-        O lead e o pedido de {r.name} serão apagados e o horário liberado na agenda. Não é possível desfazer.
+        {siblings.length > 1
+          ? `O lead de ${r.name} e os ${siblings.length} pedidos dele(a) serão apagados e os horários liberados na agenda.`
+          : `O lead e o pedido de ${r.name} serão apagados e o horário liberado na agenda.`}{' '}
+        Não é possível desfazer.
       </ConfirmDialog>
 
       <ConfirmDialog

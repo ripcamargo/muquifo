@@ -174,25 +174,25 @@ export function saveRequestAdminNotes(requestId: string, adminNotes: string) {
   );
 }
 
-/** Exclui definitivamente os dados de uma pessoa (lead + pedido) e libera a agenda. */
-export async function deleteBookingData(leadId: string) {
+/** Exclui definitivamente os dados de uma pessoa (lead + todos os pedidos dela) e libera a agenda. */
+export async function deleteBookingData(leadId: string, requestIds: string[]) {
+  const ids = [...new Set([...requestIds, leadId])];
   await withTimeout(
     runTransaction(db(), async (tx) => {
-      const requestRef = ref(COLLECTIONS.bookingRequests, leadId);
-      const reqSnap = await tx.get(requestRef);
-      if (reqSnap.exists()) {
-        const req = parseRequest(reqSnap);
-        const daySnap = await tx.get(dayRef(req.requestedDate));
-        if (daySnap.exists()) {
-          const day = parseDay(req.requestedDate, daySnap.data());
-          tx.update(dayRef(req.requestedDate), {
-            booked: day.booked.filter((o) => o.ref !== leadId),
-            holds: day.holds.filter((o) => o.ref !== leadId),
-            updatedAt: serverTimestamp(),
-          });
-        }
-        tx.delete(requestRef);
-      }
+      const reqSnaps = await Promise.all(ids.map((id) => tx.get(ref(COLLECTIONS.bookingRequests, id))));
+      const reqs = reqSnaps.filter((s) => s.exists()).map(parseRequest);
+      const dates = [...new Set(reqs.map((r) => r.requestedDate))];
+      const daySnaps = await Promise.all(dates.map((d) => tx.get(dayRef(d))));
+      daySnaps.forEach((snap, i) => {
+        if (!snap.exists()) return;
+        const day = parseDay(dates[i], snap.data());
+        tx.update(dayRef(dates[i]), {
+          booked: day.booked.filter((o) => !ids.includes(o.ref)),
+          holds: day.holds.filter((o) => !ids.includes(o.ref)),
+          updatedAt: serverTimestamp(),
+        });
+      });
+      reqs.forEach((r) => tx.delete(ref(COLLECTIONS.bookingRequests, r.id)));
       tx.delete(ref(COLLECTIONS.leads, leadId));
     }),
     20_000,
@@ -214,11 +214,14 @@ export interface AdminBookingInput {
   endTime: HHMM;
   /** Confirmado ocupa a agenda; em análise apenas retém o horário. */
   status: Extract<RequestStatus, 'confirmado' | 'aguardando_confirmacao'>;
+  /** Lead já existente a reaproveitar; sem ele, um lead novo é criado. */
+  leadId?: string;
 }
 
 /**
  * Administrador: registra um agendamento de quem pediu fora do site (ex.: WhatsApp).
- * Cria lead + pedido com o mesmo id e atualiza a ocupação do dia na mesma transação.
+ * Cria o pedido e atualiza a ocupação do dia na mesma transação. Com `leadId`, o pedido entra no lead
+ * existente (que passa a apontar para ele); sem, cria um lead novo com o mesmo id do pedido.
  * Só reservas confirmadas de outras pessoas impedem o horário; expediente e bloqueios são decisão do administrador.
  */
 export async function createAdminBooking(input: AdminBookingInput): Promise<string> {
@@ -228,10 +231,13 @@ export async function createAdminBooking(input: AdminBookingInput): Promise<stri
 
   await withTimeout(
     runTransaction(db(), async (tx) => {
-      const [daySnap, settingsSnap] = await Promise.all([
+      const existingLeadRef = input.leadId ? ref(COLLECTIONS.leads, input.leadId) : null;
+      const [daySnap, settingsSnap, existingLead] = await Promise.all([
         tx.get(dayRef(input.requestedDate)),
         tx.get(ref(COLLECTIONS.settings, SETTINGS_DOC)),
+        existingLeadRef ? tx.get(existingLeadRef) : Promise.resolve(null),
       ]);
+      if (existingLeadRef && !existingLead?.exists()) throw new Error('Esse contato não existe mais. Feche e tente de novo.');
       const day = parseDay(input.requestedDate, daySnap.data());
       const occupation: Occupation = { ref: id, start: input.startTime, end: input.endTime, service: input.serviceType };
       let { booked, holds } = day;
@@ -245,27 +251,37 @@ export async function createAdminBooking(input: AdminBookingInput): Promise<stri
         holds = [...holds, occupation];
       }
 
-      const { adminNotes, ...request } = input;
-      tx.set(ref(COLLECTIONS.leads, id), {
-        name: input.name,
-        whatsapp: input.whatsapp,
-        whatsappNormalized: input.whatsappNormalized,
-        source: 'admin',
-        status: input.status,
-        currentStep: 'enviado',
-        sessionId: id,
-        serviceType: input.serviceType,
-        bookingRequestId: id,
-        privacyNoticeVersion: studio.privacy.version,
-        ownerUid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastActivityAt: serverTimestamp(),
-      });
+      const { adminNotes, leadId: reuseLeadId, ...request } = input;
+      if (existingLeadRef) {
+        tx.update(existingLeadRef, {
+          status: input.status,
+          serviceType: input.serviceType,
+          bookingRequestId: id,
+          updatedAt: serverTimestamp(),
+          lastActivityAt: serverTimestamp(),
+        });
+      } else {
+        tx.set(ref(COLLECTIONS.leads, id), {
+          name: input.name,
+          whatsapp: input.whatsapp,
+          whatsappNormalized: input.whatsappNormalized,
+          source: 'admin',
+          status: input.status,
+          currentStep: 'enviado',
+          sessionId: id,
+          serviceType: input.serviceType,
+          bookingRequestId: id,
+          privacyNoticeVersion: studio.privacy.version,
+          ownerUid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastActivityAt: serverTimestamp(),
+        });
+      }
       tx.set(ref(COLLECTIONS.bookingRequests, id), {
         ...request,
         adminNotes,
-        leadId: id,
+        leadId: reuseLeadId ?? id,
         ownerUid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

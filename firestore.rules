@@ -105,9 +105,12 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && request.resource.data.lastActivityAt == request.time;
 
-      // Administrador: pode alterar status e anotações (os demais campos ficam como o visitante enviou).
+      // Administrador: pode alterar status e anotações e vincular um novo agendamento manual ao lead
+      // (serviço, último pedido, atividade). Nome e WhatsApp ficam como o cliente informou.
       allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+             ['status', 'adminNotes', 'updatedAt', 'serviceType', 'bookingRequestId', 'lastActivityAt'])
+        && (request.resource.data.serviceType == null || validService(request.resource.data.serviceType))
         && request.resource.data.status in ['novo', 'em_andamento', 'pedido_preparado', 'aguardando_confirmacao',
                                             'confirmado', 'recusado', 'cancelado', 'abandonado'];
 
@@ -169,7 +172,10 @@ service cloud.firestore {
              'leadId', 'ownerUid', 'name', 'whatsapp', 'whatsappNormalized', 'serviceType', 'projectName',
              'peopleCount', 'description', 'notes', 'requestedDate', 'startTime', 'endTime', 'status',
              'adminNotes', 'createdAt', 'updatedAt', 'confirmedAt'])
-        && request.resource.data.leadId == requestId
+        && (request.resource.data.leadId == requestId
+            || (exists(/databases/$(database)/documents/leads/$(request.resource.data.leadId))
+                && get(/databases/$(database)/documents/leads/$(request.resource.data.leadId)).data.whatsappNormalized
+                   == request.resource.data.whatsappNormalized))
         && request.resource.data.ownerUid == request.auth.uid
         && validName(request.resource.data.name)
         && validPhoneDisplay(request.resource.data.whatsapp)
